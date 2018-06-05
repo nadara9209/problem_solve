@@ -1,108 +1,114 @@
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Solution {
-	static int[][] Map;
-	static boolean[][] Visited;
-	static int[] Dx = {-1, 0, 1, 0};
-	static int[] Dy = {0, -1, 0, 1};
-	static Point StartP;
-	static Point EndP;
-	static int N;
+	static String Corporate_Name = "SAMSUNG";
 	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for(int tc = 1; tc <= T; ++tc) {
-			N = scan.nextInt();
-			Map = new int[N][N];
-			Visited = new boolean[N][N];
-			for(int row = 0; row < N; ++row) {
-				for(int col = 0; col < N; ++col) {
-					Map[row][col] = scan.nextInt();
-					Visited[row][col] = false;
+			int N = scan.nextInt();
+			ArrayList<Interviewer> interviewerList = new ArrayList<>(); 
+			for(int nInterviewer = 0; nInterviewer < N; ++nInterviewer) {
+				int L = scan.nextInt();
+				String name = "";
+				for(int lname = 0; lname < L; ++lname) {
+					name += scan.next();
 				}
+				int score = scan.nextInt();
+				interviewerList.add(new Interviewer(name, score));
 			}
-			
-			int startX = scan.nextInt();
-			int startY = scan.nextInt();
-			int endX = scan.nextInt();
-			int endY = scan.nextInt();
-			
-			StartP = new Point(startX, startY, 0);
-			EndP = new Point(endX, endY, 0);
-			
-			System.out.println("#" + tc + " " + solve());
+			System.out.println("#" + tc + " " + solve(interviewerList));
 		}
 		scan.close();
 	}
 
-	private static int solve() {
-		Point retP = null;
-		// 큐에 넣고
-		PriorityQueue<Point> q = new PriorityQueue<>();
-		q.offer(StartP);
-		Visited[StartP.x][StartP.y] = true;
+	private static int solve(ArrayList<Interviewer> interviewerList) {
+		int nId = interviewerList.size();
+		int[] idArr = new int[nId];
+		for(int i = 0; i < nId; ++i) {
+			idArr[i] = i;
+		}
 		
-		// 큐가 다 빌 때까지
-		while(!q.isEmpty()) {
-			// 확인할 point를 큐에서 빼고
-			Point p = q.poll();
-			Visited[p.x][p.y] = true;
-			if(p.x == EndP.x && p.y == EndP.y) {
-				retP = p;
-				break;
+		int retScore = Integer.MAX_VALUE;
+		for(int i = 0; i < (1 << nId); ++i) {
+			String name = "";
+			int score = 0;
+			for(int j = 0; j < nId; ++j) {
+				if((i & (1 << j)) != 0) {
+					name += interviewerList.get(idArr[j]).getName();
+					score += interviewerList.get(idArr[j]).getScore();
+				}
 			}
-			// 현재 시각
-			int currTime = p.t;
-			// point의 모든 근접배열로 이동
-			for(int i = 0; i < 4; ++i) {
-				int nextX = p.x + Dx[i];
-				int nextY = p.y + Dy[i];
-				int nextTime = currTime + 1;
-				
-				// 벽
-				if(nextX < 0 || nextY < 0 || nextX >= N || nextY >= N) {
-					continue;
-				}
-				// 장애물
-				if(Visited[nextX][nextY] || Map[nextX][nextY] == 1) {
-					continue;
-				}
-				
-				int tOffset = 0;
-				if(Map[nextX][nextY] == 2) {
-					tOffset = 2 - (currTime % 3);
-				}
-				
-				q.offer(new Point(nextX, nextY, nextTime + tOffset));
+			if(name.length() < Corporate_Name.length() || !isMatchable(name)) {
+				continue;
+			}
+			if(score < retScore) {
+				retScore = score;
 			}
 		}
 		
-		return Visited[EndP.x][EndP.y] ? retP.t : -1;
+		return (retScore != Integer.MAX_VALUE) ? retScore : -1;
+	}
+
+	private static boolean isMatchable(String name) {
+		Map<Character, Integer> answerMap = createMap(Corporate_Name);
+		Map<Character, Integer> interviewerMap = createMap(name);
+		subMap(answerMap, interviewerMap);
+		
+		for(char c : answerMap.keySet()) {
+			int val = answerMap.get(c);
+			if(val > 0) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	private static void subMap(Map<Character, Integer> answerMap, Map<Character, Integer> interviewerMap) {
+		for (char c : answerMap.keySet()) {
+			if (interviewerMap.containsKey(c)) {
+				int val = answerMap.get(c) - interviewerMap.get(c);
+				answerMap.put(c, val);
+	        }
+	    }
+	}
+
+	private static Map<Character, Integer> createMap(String str) {
+		Map<Character, Integer> chMap = new HashMap<>();
+		
+		for(int i = 0 ; i < str.length(); ++i) {
+			char c = str.charAt(i);
+			
+			int val = 0;
+			if(chMap.containsKey(c)) {
+				val = chMap.get(c);
+			}
+			
+			chMap.put(c, val+1);
+		}
+		return chMap;
 	}
 }
 
-class Point implements Comparable<Point> {
-	public int x;
-	public int y;
-	public int t;
+class Interviewer {
+	private String _name;
+	private int _score;
 	
-	Point(int x, int y, int t) {
-		this.x = x;
-		this.y = y;
-		this.t = t;
+	public Interviewer(String tmpName, int tmpScore) {
+		this._name = tmpName;
+		this._score = tmpScore;
 	}
 
-	public int compareTo(Point o) {
-		if(t - o.t > 0) {
-			return 1;
-		}
-		else if (t - o.t < 0) {
-			return -1;
-		}
-		else {
-			return 0;
-		}
+	public String getName() {
+		return this._name;
+	}
+	
+	public int getScore() {
+		return this._score;
 	}
 }

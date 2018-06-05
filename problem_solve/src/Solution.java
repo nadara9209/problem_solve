@@ -34,15 +34,18 @@ public class Solution {
 		}
 		
 		int retScore = Integer.MAX_VALUE;
+		// 면접관 리스트의 인덱스을 원소로 가지는 집합으로 하여 모든 부분집합 case에 해당하는 
 		for(int i = 0; i < (1 << nId); ++i) {
 			String name = "";
 			int score = 0;
 			for(int j = 0; j < nId; ++j) {
 				if((i & (1 << j)) != 0) {
+					// 면접관들의 이름 문자열과 합계 점수 정보를 생성하여 
 					name += interviewerList.get(idArr[j]).getName();
 					score += interviewerList.get(idArr[j]).getScore();
 				}
 			}
+			// "SAMSUNG"을 만들 수 있는지 확인한다.
 			if(name.length() < Corporate_Name.length() || !isMatchable(name)) {
 				continue;
 			}
@@ -57,6 +60,7 @@ public class Solution {
 	private static boolean isMatchable(String name) {
 		Map<Character, Integer> answerMap = createMap(Corporate_Name);
 		Map<Character, Integer> interviewerMap = createMap(name);
+		// Corporte_Name을 이루고 있는 모든 문자를 포함하고 있는지 확인
 		subMap(answerMap, interviewerMap);
 		
 		for(char c : answerMap.keySet()) {

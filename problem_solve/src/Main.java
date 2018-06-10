@@ -4,8 +4,8 @@ import java.util.Scanner;
 
 public class Main {
 	static int[] Dheight = {-1,  1,  0,  0,  0,  0};
-	static int[] Drow	= { 0,  0, -1,  1,  0,  0};
-	static int[] Dcol 	= { 0,  0,  0,  0, -1,  1};
+	static int[] Drow	 = { 0,  0, -1,  1,  0,  0};
+	static int[] Dcol 	 = { 0,  0,  0,  0, -1,  1};
 	static int M;
 	static int N;
 	static int H;

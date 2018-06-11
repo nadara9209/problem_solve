@@ -3,136 +3,124 @@ import java.util.Queue;
 import java.util.Scanner;
 
 public class Main {
-	static int[] Dheight = {-1,  1,  0,  0,  0,  0};
-	static int[] Drow	 = { 0,  0, -1,  1,  0,  0};
-	static int[] Dcol 	 = { 0,  0,  0,  0, -1,  1};
+	static Tomato[][][] Tomatoes;
+	static int H;
 	static int M;
 	static int N;
-	static int H;
-	static boolean inFirstAlreadyAllRipen = true;
+	
+	static int[] Dheight = {-1,  1,  0,  0,  0,  0};
+	static int[] Drow    = { 0,  0, -1,  1,  0,  0};
+	static int[] Dcol    = { 0,  0,  0,  0, -1,  1};
+	
+	static boolean isAlreadyAllRipened = true;
+	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		M = scan.nextInt();
 		N = scan.nextInt();
 		H = scan.nextInt();
-		Tomato[][][] Tomatoes = new Tomato[H][N][M];
-
-		// create
+		// create Tomatoes
+		Tomatoes = new Tomato[H][N][M];
 		for(int height = 0; height < H; ++height) {
 			for(int row = 0; row < N; ++row) {
 				for(int col = 0; col < M; ++col) {
 					int val = scan.nextInt();
-					Tomato tomato = null;
+					Tomato t = null;
 					switch (val) {
-					// 익은
-					case 1:
-						tomato = new Tomato(height, row, col, true, true, false, 0);
-						break;
-					// 익지 않은
-					case 0:
-						tomato = new Tomato(height, row, col, true, false, false, 0);
-						inFirstAlreadyAllRipen = false;
-						break;
-					// 빈 칸
 					case -1:
-						tomato = new Tomato(height, row, col, false, false, false, 0);
+						break;
+					case 0:
+						t = new Tomato(height, row, col, false);
+						isAlreadyAllRipened = false;
+						break;
+					case 1:
+						t = new Tomato(height, row, col, true);
 						break;
 					default:
 						break;
 					}
-					Tomatoes[height][row][col] = tomato;
-
+					Tomatoes[height][row][col] = t;
 				}
 			}
 		}
-
-		System.out.println(solve(Tomatoes));
+		// process
+		System.out.println(solve());
 		scan.close();
 	}
-
-	private static int solve(Tomato[][][] Tomatoes) {
-		int ret = 0;
-		// 처음부터 다 익어있지 않다면
-		if(!inFirstAlreadyAllRipen) {
-			progressToRipenAll(Tomatoes);
-			ret = count(Tomatoes);
+	
+	private static int solve() {
+		int minDaysOfAllRipened = 0;
+		if(!isAlreadyAllRipened) {
+			processToAllRipened();
+			minDaysOfAllRipened = count();
 		}
-		return ret;
+		return minDaysOfAllRipened;
 	}
 
-	private static int count(Tomato[][][] Tomatoes) {
-		boolean isImpossibleToRipenAll = false;
-		int ret = 0;
+	private static int count() {
+		int maxNumOfDays = 0;
 		for(int height = 0; height < H; ++height) {
 			for(int row = 0; row < N; ++row) {
 				for(int col = 0; col < M; ++col) {
-					Tomato tomato = Tomatoes[height][row][col];
-					if(!tomato.isExisted){
+					Tomato t = Tomatoes[height][row][col];
+					if(t == null) {
 						continue;
 					}
-					if(!tomato.isRipen) {
-						isImpossibleToRipenAll = true;
+					if(!t.isRipened) {
+						return -1;
 					}
-					int tmp = tomato.nDays;
-					if(ret < tmp) {
-						ret = tmp;
+					int nDays = t.nDays;
+					if(maxNumOfDays < nDays) {
+						maxNumOfDays = nDays;
 					}
 				}
 			}
 		}
-
-		// 모든 과정의 마무리 후에 토마토가 존재하지만 익지 않았다면
-		if(isImpossibleToRipenAll) {
-			ret = -1;
-		}
-		return ret;
+		return maxNumOfDays;
 	}
 
-	private static void progressToRipenAll(Tomato[][][] Tomatoes) {
+	private static void processToAllRipened() {
 		Queue<Tomato> q = new ArrayDeque<>();
-		// 맨 처음 익은 걸 q에 넣고
 		for(int height = 0; height < H; ++height) {
 			for(int row = 0; row < N; ++row) {
 				for(int col = 0; col < M; ++col) {
-					Tomato tomato = Tomatoes[height][row][col];
-					if(tomato.isRipen) {
-						q.offer(tomato);
+					Tomato t = Tomatoes[height][row][col];
+					if(t == null) {
+						continue;
+					}
+					if(t.isRipened) {
+						q.offer(t);
 					}
 				}
 			}
 		}
-
+		
 		while(!q.isEmpty()) {
-			Tomato tomato = q.poll();
-			int currnDays = tomato.nDays;
-			int currHeight = tomato.height;
-			int currRow = tomato.row;
-			int currCol = tomato.col;
-
-			if (tomato.isVisited) {
-				continue;
-			}
-			tomato.isVisited = true;
-			tomato.isRipen = true;
-
+			Tomato t = q.poll();
+			int currHeight = t.height;
+			int currRow = t.row;
+			int currCol = t.col;
+			int currDays = t.nDays;
+			
 			for(int i = 0; i < 6; ++i) {
 				int nextHeight = currHeight + Dheight[i];
 				int nextRow = currRow + Drow[i];
 				int nextCol = currCol + Dcol[i];
-				int nextnDays = currnDays + 1;
-
-				if(nextRow < 0 || nextCol < 0 || nextHeight < 0 || nextRow >= N || nextCol >= M || nextHeight >= H) {
+				int nextDays = currDays + 1;
+				
+				if(nextHeight < 0 || nextRow < 0 || nextCol < 0 ||
+				   nextHeight >= H || nextRow >= N || nextCol >= M) {
 					continue;
 				}
-
-				Tomato nextTomato = Tomatoes[nextHeight][nextRow][nextCol];
-				if(!nextTomato.isExisted || nextTomato.isVisited || nextTomato.isRipen) {
+				
+				t = Tomatoes[nextHeight][nextRow][nextCol];
+				if(t == null || t.isRipened) {
 					continue;
 				}
-
-				nextTomato.isRipen = true;
-				nextTomato.nDays = nextnDays;
-				q.offer(nextTomato);
+				
+				t.isRipened = true;
+				t.nDays = nextDays;
+				q.offer(t);
 			}
 		}
 	}
@@ -142,18 +130,14 @@ class Tomato {
 	int height;
 	int row;
 	int col;
-	boolean isExisted;
-	boolean isRipen;
-	boolean isVisited;
+	boolean isRipened;
 	int nDays;
-
-	Tomato(int height, int row, int col, boolean isExisted, boolean isRipen, boolean isVisited, int nDays) {
+	
+	Tomato(int height, int row, int col, boolean isRipened) {
 		this.height = height;
 		this.row = row;
 		this.col = col;
-		this.isExisted = isExisted;
-		this.isRipen = isRipen;
-		this.isVisited = isVisited;
-		this.nDays = nDays;
+		this.isRipened = isRipened;
+		this.nDays = 0;
 	}
 }

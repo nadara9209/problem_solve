@@ -46,8 +46,9 @@ public class Main {
 			return operateSumOfDistance(selectedList);
 		}
 		int ret = Integer.MAX_VALUE;
-		int remainingSizeOfCandidateList = candidateList.size() - M + selectedList.size() + 1;
-		for(int i = 0; i < remainingSizeOfCandidateList; ++i) {
+		// 후보 리스트에서 뽑을 수 있는 갯수
+		int remainingSize = candidateList.size() - M + selectedList.size() + 1;
+		for(int i = 0; i < remainingSize; ++i) {
 			selectedList.add(candidateList.get(i));
 			LinkedList<Point> remainCandidateList = new LinkedList<>(candidateList.subList(i+1, candidateList.size()));
 			int tmp = makeAllCases(selectedList, remainCandidateList);

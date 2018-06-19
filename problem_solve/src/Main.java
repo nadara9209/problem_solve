@@ -1,161 +1,105 @@
-import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Main {
-	static int[] Drow = {-1,  0,  1,  0};
-	static int[] Dcol = { 0,  1,  0, -1};
+	static int N;
+	static int M;
+	static int[][] map;
+	static int[] Drow = {-1,  1,  0,  0};
+	static int[] Dcol = { 0,  0, -1,  1};
+	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
-		int N = scan.nextInt();
-		int M = scan.nextInt();
-		int[][] map = new int[N][M];
-		LinkedList<CCTV> listOfCCTV = new LinkedList<>();
-		
+		N = scan.nextInt();
+		M = scan.nextInt();
+		map = new int[N+1][N+1];
+		LinkedList<Point> candidateList = new LinkedList<>();
 		// create
-		for(int row = 0; row < N; ++row) {
-			for(int col = 0; col < M; ++col) {
+		for(int row = 1; row < N+1; ++row) {
+			for(int col = 1; col < N+1; ++col) {
 				int val = scan.nextInt();
-				if(val > 0 && val < 6) {
-					listOfCCTV.add(new CCTV(row, col, val));
+				if(val == 2) {
+					candidateList.add(new Point(row, col, row, col));
 					continue;
 				}
 				map[row][col] = val;
 			}
 		}
 		
-		// 초기 정보
-		Room room = new Room(map, listOfCCTV);
-		int answer = solve(room);
+		int answer = solve(candidateList);
 		System.out.println(answer);
 		scan.close();
 	}
 	
-	private static int solve(Room room) {
-		int nSafety = 0;
-		nSafety = makeAllCases(room, 0);
-		return nSafety;
+	private static int solve(LinkedList<Point> candidateList) {
+		// M개를 구성할 수 있는 모든 치킨집의 예를 구하고
+		LinkedList<Point> selectedList = new LinkedList<>();
+		int minSumOfDistance = makeAllCases(selectedList, candidateList);
+		// 최소한의 치킨 거리를 도출한다.
+		return minSumOfDistance;
 	}
 
-	private static int makeAllCases(Room room, int i) {
-		// 마지막 CCTV를 돌린 후
-		if(i == room.listOfCCTV.size()) {
-			return room.getNumOfSafetySector();
+	private static int makeAllCases(LinkedList<Point> selectedList, LinkedList<Point> candidateList) {
+		if(selectedList.size() == M) {
+			// 설정된 치킨 집으로 치킨거리의 합을 구한다.
+			return operateSumOfDistance(selectedList);
 		}
 		int ret = Integer.MAX_VALUE;
-		for(int cnt = 0; cnt < 4; ++cnt) {
-			room.listOfCCTV.get(i).rotate();
-			int tmp = makeAllCases(room, i+1);
+		int remainingSizeOfCandidateList = candidateList.size() - M + selectedList.size() + 1;
+		for(int i = 0; i < remainingSizeOfCandidateList; ++i) {
+			selectedList.add(candidateList.get(i));
+			LinkedList<Point> remainCandidateList = new LinkedList<>(candidateList.subList(i+1, candidateList.size()));
+			int tmp = makeAllCases(selectedList, remainCandidateList);
 			if(ret > tmp) {
 				ret = tmp;
 			}
+			selectedList.remove(selectedList.size()-1);
 		}
 		return ret;
 	}
 
-	static class Room {
-		int[][] map;
-		LinkedList<CCTV> listOfCCTV;
-		
-		Room(int[][] map, LinkedList<CCTV> listOfCCTV) {
-			this.map = map;
-			this.listOfCCTV = listOfCCTV;
+	private static int operateSumOfDistance(LinkedList<Point> selectedList) {
+		Queue<Point> q = new LinkedList<>();
+		for(int i = 0; i < selectedList.size(); ++i) {
+			q.offer(selectedList.get(i));
 		}
-
-		public int getNumOfSafetySector() {
-			int[][] tmpMap = this.copyMap(); 
-			for(int i = 0; i < this.listOfCCTV.size(); ++i) {
-				CCTV c = this.listOfCCTV.get(i);
-				this.monitor(c, tmpMap);
-			}
-			int nSafety = this.count(tmpMap);
-			return nSafety;
-		}
-		
-		private int[][] copyMap() {
-			int n = map.length;
-			int m = map[0].length;
-			
-			int[][] tmpMap = new int[n][m];
-			for(int row = 0; row < n; ++row) {
-				for(int col = 0; col < m; ++col) {
-					tmpMap[row][col] = this.map[row][col];
+		int[][] visited = new int[N+1][N+1];
+		int sumOfDistance = 0;
+		while(!q.isEmpty()) {
+			Point p = q.poll();
+			for(int i = 0; i < 4; ++i) {
+				int nextRow = p.curRow + Drow[i];
+				int nextCol = p.curCol + Dcol[i];
+				if(!isValid(nextRow, nextCol) || visited[nextRow][nextCol] == 1) {
+					continue;
 				}
-			}
-			return tmpMap;
-		}
-		
-		private void monitor(CCTV c, int[][] tmpMap) {
-			for(int i = 0; i < c.dirList.size(); ++i) {
-				if(c.dirList.get(i) == 1) {
-					this.check(c.row, c.col, i, tmpMap);
+				if(map[nextRow][nextCol] == 1) {
+					int valRow = p.srcRow - nextRow;
+					int valCol = p.srcCol - nextCol;
+					sumOfDistance += Math.abs(valRow) + Math.abs(valCol);
 				}
+				visited[nextRow][nextCol] = 1;
+				q.offer(new Point(p.srcRow, p.srcCol, nextRow, nextCol));
 			}
 		}
-		
-		private void check(int row, int col, int i, int[][] tmpMap) {
-			while(this.isValid(row, col, tmpMap)) {
-				// 벽
-				if(tmpMap[row][col] == 6) {
-					break;
-				}
-				tmpMap[row][col] = 1;
-				row += Drow[i];
-				col += Dcol[i];
-			}
-		}
-		
-		private boolean isValid(int row, int col, int[][] tmpMap) {
-			return (row >= 0 && col >= 0 && row < tmpMap.length && col < tmpMap[0].length);
-		}
-		
-		private int count(int[][] tmpMap) {
-			int cnt = 0;
-			for(int row = 0; row < tmpMap.length; ++row) {
-				for(int col = 0; col < tmpMap[0].length; ++col) {
-					if(tmpMap[row][col] == 0) {
-						cnt++;
-					}
-				}
-			}
-			return cnt;
-		}
+		return sumOfDistance;
 	}
 
-	static class CCTV {
-		int row;
-		int col;
-		LinkedList<Integer> dirList;
-		
-		CCTV(int row, int col, int n) {
-			this.row = row;
-			this.col = col;
-			
-			switch (n) {
-			case 1: // 1번 
-				this.dirList = new LinkedList<>(Arrays.asList(1, 0, 0, 0));
-				break;
-			case 2: // 2번 
-				this.dirList = new LinkedList<>(Arrays.asList(1, 0, 1, 0));
-				break;
-			case 3: // 3번 
-				this.dirList = new LinkedList<>(Arrays.asList(1, 1, 0, 0));
-				break;
-			case 4: // 4번 
-				this.dirList = new LinkedList<>(Arrays.asList(1, 1, 1, 0));
-				break;
-			case 5: // 5번 
-				this.dirList = new LinkedList<>(Arrays.asList(1, 1, 1, 1));
-				break;
-			default:
-				break;
-			}
-		}
-
-		public void rotate() {
-			int dir = dirList.removeFirst();
-			dirList.addLast(dir);
-		}
+	private static boolean isValid(int nextRow, int nextCol) {
+		return (nextRow > 0 && nextCol > 0 && nextRow <= N && nextCol <= N);
 	}
 }
 
+class Point {
+	int srcRow;
+	int srcCol;
+	int curRow;
+	int curCol;
+	Point(int srcRow, int srcCol, int curRow, int curCol) {
+		this.srcRow = srcRow;
+		this.srcCol = srcCol;
+		this.curRow = curRow;
+		this.curCol = curCol;
+	}
+}

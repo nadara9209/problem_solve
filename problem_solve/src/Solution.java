@@ -62,6 +62,7 @@ public class Solution {
 			}
 		}
 		
+		// 첫 인덱스 선택 후라서 +1
 		int size = 1 + maxSubSize;
 		MEMO[i] = size;
 		return size;

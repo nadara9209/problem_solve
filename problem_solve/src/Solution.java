@@ -1,50 +1,49 @@
 import java.util.Scanner;
- 
-class Solution {
-	static int[][] MEMO = new int[1001][1001];
-	static String StrA;
-	static String StrB;
-    public static void main(String[] args) {
-        Scanner scan = new Scanner(System.in);
-        int T = scan.nextInt();
-        for(int tc = 1; tc <= T; ++tc) {
-        	StrA = scan.next();
-            StrB = scan.next();
-            System.out.println("#" + tc + " " + solve());
-        }
-        scan.close();
-    }
-	
-    private static int solve() {
-    	int answer = countLCS();
-    	return answer;
-	}
 
-	private static int countLCS() {
-		// 패딩 채우기
-    	int lenOfStrA = StrA.length();
-    	int lenOfStrB = StrB.length();
-    	for(int col = 0; col <= lenOfStrA; ++col) {
-    		MEMO[lenOfStrB][col] = 0;
-    	}
-    	for(int row = 0; row <= lenOfStrB; ++row) {
-    		MEMO[row][lenOfStrA] = 0;
-    	}
-    	
-    	// 점화식 결과 채우기
-    	int endIdOfStrA = lenOfStrA - 1;
-    	int endIdOfStrB = lenOfStrB - 1;
-    	for(int row = endIdOfStrB; row >= 0; --row) {
-    		for(int col = endIdOfStrA; col >= 0; --col) {
-    			int match = (StrA.charAt(col) == StrB.charAt(row)) ? 1 : 0;
-    			int right = MEMO[row][col+1];
-    			int down = MEMO[row+1][col];
-    			int diagonal = MEMO[row+1][col+1] + match;
-    			
-    			MEMO[row][col] = Math.max(Math.max(right, down), diagonal);
-    		}
-    	}
-    	
-    	return MEMO[0][0];
+public class Solution {
+	static int[][] map;
+	static int N;
+	static int X;
+	public static void main(String[] args) {
+		Scanner scan = new Scanner(System.in);
+		int T = scan.nextInt();
+		for(int tc = 1; tc < T; ++tc) {
+			N = scan.nextInt();
+			X = scan.nextInt();
+			
+			map = new int[N][N];
+			for(int row = 0; row < N; ++row) {
+				for(int col = 0; col < N; ++col) {
+					int val = scan.nextInt();
+					map[row][col] = val;
+				}
+			}
+			
+			System.out.println("#" + tc + " " + solve());
+		}
+		scan.close();
+	}
+	private static int solve() {
+		int answer = 0;
+		// 행간의 한 라인을 받아서 따로 저장하고
+		// 행 
+		for(int row = 0; row < N; ++row) {
+			for(int col = 0; col < N; ++col) {
+				
+			}
+		}
+		
+		// 열
+		for(int col = 0; col < N; ++col) {
+			for(int row = 0; row < N; ++row) {
+				
+			}
+		}
+		
+		// 저장된 한 라인을 검사하여 
+		// 활주로 건설 여부 확인하고 
+		// 여부에 맞게 cnt를 증가 시킨다.
+		
+		return answer;
 	}
 }

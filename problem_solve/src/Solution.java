@@ -60,12 +60,12 @@ public class Solution {
 			this.map[row][col] += val;
 			
 			for(int i = 0; i < 8; ++i) {
-				int currRow = row;
-				int currCol = col;
-				while(this.isValid(currRow+Drow[i], currCol+Dcol[i])) {
-					currRow += Drow[i];
-					currCol += Dcol[i];
-					this.map[currRow][currCol] += val;
+				int nextRow = row;
+				int nextCol = col;
+				while(this.isValid(nextRow+Drow[i], nextCol+Dcol[i])) {
+					nextRow += Drow[i];
+					nextCol += Dcol[i];
+					this.map[nextRow][nextCol] += val;
 				}
 			}
 		}

@@ -35,7 +35,8 @@ public class Solution {
 	private static int makeAllCases(int sum, int index) {
 		if(index >= N) {
 			if(sum >= B) {
-				return sum - B;
+				int gap = sum-B;
+				return gap;
 			}
 			else {
 				return Integer.MAX_VALUE;
@@ -43,7 +44,7 @@ public class Solution {
 		}
 		
 		// 선택
-		int sumOfCaseA = makeAllCases(sum + Heights[index], index+1);
+		int sumOfCaseA = makeAllCases(sum+Heights[index], index+1);
 		// 미선택
 		int sumOfCaseB = makeAllCases(sum, index+1);
 	

@@ -33,7 +33,7 @@ public class Solution {
 	}
 	
 	private static int makeAllCases(int sum, int index) {
-		if(index >= N) {
+		if(index == N) {
 			if(sum >= B) {
 				int gap = sum-B;
 				return gap;
@@ -43,9 +43,7 @@ public class Solution {
 			}
 		}
 		
-		// 선택
 		int sumOfCaseA = makeAllCases(sum+Heights[index], index+1);
-		// 미선택
 		int sumOfCaseB = makeAllCases(sum, index+1);
 	
 		return Math.min(sumOfCaseA, sumOfCaseB);

@@ -1,9 +1,9 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.Scanner;
 import java.util.List;
 import java.util.Queue;
-import java.util.Scanner;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class Solution {
 	static CounterDesk ReceptionDesk;

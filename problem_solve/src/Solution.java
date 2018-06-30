@@ -1,72 +1,40 @@
-import java.util.LinkedList;
 import java.util.Scanner;
 
 public class Solution {
-	static int N;
-	static int X;
-	static int[][] map;
-	
+	static char[] BracketArr = {'(', ')', '[', ']', '{', '}', '<', '>'}; 
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
-		int T = scan.nextInt();
-		for(int tc = 1; tc < T; ++tc) {
-			N = scan.nextInt();
-			X = scan.nextInt();
-			// create
-			map = new int[N][N];
-			for(int row = 0; row < N; ++row) {
-				for(int col = 0; col < N; ++col) {
-					int height = scan.nextInt();
-					map[row][col] = height;
-				}
-			}
+		int T = 10;
+		for(int tc = 1; tc <= T; ++tc) {
+			int N = scan.nextInt();
+			String str = scan.next();
 			
-			// 가능한 경우 수들의 합
-			int answer = sumOfPossibleCases();
+			int answer = solve(N, str);
+			
 			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
-
-	private static int sumOfPossibleCases() {
-		LinkedList<Point> pointList = new LinkedList<>();
+	
+	private static int solve(int n, String str) {
+		int[] numOfBracket = new int[8];
 		
-		int cntOfPossibleCases = 0;
-		// 행
-		for(int row = 0; row < N; ++row) {
-			for(int col = 0; col < N; ++col) {
-				checkArr[col] = map[row][col];
-			}
-			if(isAvailable(checkArr)) {
-				cntOfPossibleCases++;
-			}
-		}
-		// 열
-		for(int col = 0; col < N; ++col) {
-			for(int row = 0; row < N; ++row) {
-				checkArr[row] = map[row][col];
-			}
-			if(isAvailable(checkArr)) {
-				cntOfPossibleCases++;
+		for(int i = 0; i < n; ++i) {
+			char ch = str.charAt(i);
+			for(int j = 0; j < 8; ++j) {
+				if(ch == BracketArr[j]) {
+					numOfBracket[j]++;
+					break;
+				}
 			}
 		}
 		
-		return cntOfPossibleCases;
-	}
-
-	// map의 한 행, 열을 받아와서 활주로 건설의 가능성 유무를 확인
-	private static boolean isAvailable(int[] checkArr) {
+		for(int i = 0; i < 8; i+=2) {
+			if(numOfBracket[i] != numOfBracket[i+1]) {
+				return 0;
+			}
+		}
 		
-		return false;
+		return 1;
 	}
 }
-
-class Point {
-	int id;
-	boolean isUp;
-	
-	Point(int id, boolean isUp) {
-		this.id = id;
-		this.isUp = isUp;
-	}
-} 

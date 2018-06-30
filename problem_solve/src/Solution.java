@@ -1,72 +1,185 @@
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
-	static int N;
-	static int X;
-	static int[][] map;
-	
+	static CounterDesk ReceptionDesk;
+	static CounterDesk RepairDesk;
+	static int K;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
-		for(int tc = 1; tc < T; ++tc) {
-			N = scan.nextInt();
-			X = scan.nextInt();
-			// create
-			map = new int[N][N];
-			for(int row = 0; row < N; ++row) {
-				for(int col = 0; col < N; ++col) {
-					int height = scan.nextInt();
-					map[row][col] = height;
-				}
-			}
+		for(int tc = 1; tc <= T; ++tc) {
+			Queue<Customer> customerList = new LinkedList<>();
+			List<Counter> receptionCounterList = new ArrayList<>();
+			List<Counter> repairCounterList = new ArrayList<>();
 			
-			// 가능한 경우 수들의 합
-			int answer = sumOfPossibleCases();
+			int N = scan.nextInt();
+			int M = scan.nextInt();
+			K = scan.nextInt();
+			// goal Customer info
+			int A = scan.nextInt();
+			int B = scan.nextInt();
+			
+			// create reception Desk 
+			for(int i = 1; i <= N; ++i) {
+				int val = scan.nextInt();
+				receptionCounterList.add(new Counter(i, val));
+			}
+			ReceptionDesk = new CounterDesk(receptionCounterList);
+			
+			// create repair Desk
+			for(int i = 1; i <= M; ++i) {
+				int val = scan.nextInt();
+				repairCounterList.add(new Counter(i, val));
+			}
+			RepairDesk = new CounterDesk(repairCounterList);
+			
+			// create Customer waiting line
+			for(int i = 1; i <= K; ++i) {
+				int val = scan.nextInt();
+				customerList.offer(new Customer(i, val));
+			}
+
+			// result 
+			int answer = solve(customerList, A, B);
 			System.out.println("#" + tc + " " + answer);
 		}
+		
 		scan.close();
 	}
 
-	private static int sumOfPossibleCases() {
-		LinkedList<Point> pointList = new LinkedList<>();
+	private static int solve(Queue<Customer> customerList, int a, int b) {
+		Queue<Customer> afterReceptionList = new LinkedList<>();
+		afterReceptionList = processWithReceptionDesk(customerList);
+		Queue<Customer> afterRepairList = new LinkedList<>();
+		afterRepairList = processWithRepairDesk(afterReceptionList);
 		
-		int cntOfPossibleCases = 0;
-		// 행
-		for(int row = 0; row < N; ++row) {
-			for(int col = 0; col < N; ++col) {
-				checkArr[col] = map[row][col];
-			}
-			if(isAvailable(checkArr)) {
-				cntOfPossibleCases++;
+		int sumOfCustomerId = 0;
+		while(!afterRepairList.isEmpty()) {
+			Customer c = afterRepairList.poll();
+			if(c.receptionCounterId == a && c.repairCounterId == b) {
+				sumOfCustomerId += c.id;
 			}
 		}
-		// 열
-		for(int col = 0; col < N; ++col) {
-			for(int row = 0; row < N; ++row) {
-				checkArr[row] = map[row][col];
-			}
-			if(isAvailable(checkArr)) {
-				cntOfPossibleCases++;
-			}
-		}
-		
-		return cntOfPossibleCases;
+		return (sumOfCustomerId == 0) ? -1 : sumOfCustomerId;
 	}
 
-	// map의 한 행, 열을 받아와서 활주로 건설의 가능성 유무를 확인
-	private static boolean isAvailable(int[] checkArr) {
-		
-		return false;
+	private static Queue<Customer> processWithRepairDesk(Queue<Customer> afterReceptionList) {
+		Queue<Customer> retList = new LinkedList<>();
+		int time = 0;
+		while(retList.size() != K) {
+			RepairDesk.putUpCustomerToCounter(time, retList);
+			RepairDesk.putDownCustomerToCounter(time, afterReceptionList);
+			time++;
+		}
+		return retList;
+	}
+
+	private static Queue<Customer> processWithReceptionDesk(Queue<Customer> customerList) {
+		Queue<Customer> retList = new LinkedList<>();
+		int time = 0;
+		while(retList.size() != K) {
+			ReceptionDesk.putUpCustomerToCounter(time, retList);
+			ReceptionDesk.putDownCustomerToCounter(time, customerList);
+			time++;
+		}
+		return retList;
 	}
 }
 
-class Point {
-	int id;
-	boolean isUp;
-	
-	Point(int id, boolean isUp) {
-		this.id = id;
-		this.isUp = isUp;
+class CounterDesk {
+	List<Counter> counterList;
+	CounterDesk(List<Counter> list) {
+		this.counterList = list;
 	}
-} 
+	
+	public void putDownCustomerToCounter(int time, Queue<Customer> customerList) {
+		for(int i = 0; i < this.counterList.size(); ++i) {
+			if(customerList.isEmpty() || !(time >= customerList.peek().arrivalTime)) {
+				break;
+			}
+			Counter c = counterList.get(i);
+			if(c.isUsable) {
+				c.startTime = time;
+				c.currCustomer = customerList.poll();
+				c.isUsable = false;
+			}
+		}
+	}
+
+	public void putUpCustomerToCounter(int time, Queue<Customer> retList) {
+		List<Customer> tmpList = new ArrayList<>();
+		boolean isReceptionDesk = false;
+		for(int i = 0; i < this.counterList.size(); ++i) {
+			Counter c = this.counterList.get(i);
+			if(!c.isUsable) {
+				if((time - c.startTime) == c.processingTime) {
+					if(c.currCustomer.receptionCounterId == 0) {
+						c.currCustomer.receptionCounterId = c.id;
+						isReceptionDesk = true;
+					}
+					else if(c.currCustomer.repairCounterId == 0) {
+						c.currCustomer.repairCounterId = c.id;
+					}
+					c.currCustomer.arrivalTime = time;
+					tmpList.add(c.currCustomer);
+					c.startTime = 0;
+					c.isUsable = true;
+					c.currCustomer = null;
+				}
+			}
+		}
+		// only needed for Reception Process
+		if(isReceptionDesk && tmpList.size() > 1) {
+			Collections.sort(tmpList);
+		}
+		for(int i = 0; i < tmpList.size(); ++i) {
+			retList.offer(tmpList.get(i));
+		}
+	}
+}
+
+class Counter {
+	int id;
+	int processingTime;
+	int startTime;
+	boolean isUsable;
+	Customer currCustomer;
+	
+	Counter(int id, int processingTime) {
+		this.id = id;
+		this.processingTime = processingTime;
+		this.startTime = 0;
+		this.isUsable = true;
+		this.currCustomer = null;
+	}
+}
+
+class Customer implements Comparable<Customer>{
+	int id;
+	int arrivalTime;
+	int receptionCounterId;
+	int repairCounterId;
+	Customer(int id, int arrivalTime) {
+		this.id = id;
+		this.arrivalTime = arrivalTime;
+		this.receptionCounterId = 0;
+		this.repairCounterId = 0;
+	}
+	
+	public int compareTo(Customer o) {
+		if(this.receptionCounterId > o.receptionCounterId) {
+			return 1;
+		}
+		else if(this.receptionCounterId < o.receptionCounterId) {
+			return -1;
+		}
+		else {
+			return 0;
+		}
+	}
+}

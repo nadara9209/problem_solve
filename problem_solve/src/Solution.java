@@ -1,61 +1,66 @@
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
-public class Solution {
-	static int[] Drow = {-1,  1,  0,  0};
-	static int[] Dcol = { 0,  0, -1,  1};
+class Solution {
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for(int tc = 1; tc <= T; ++tc) {
 			int N = scan.nextInt();
+			int M = scan.nextInt();
 			int K = scan.nextInt();
 			
-			int maxHeight = 0;
-			// create map
-			int[][] map = new int[N][N];
-			for(int row = 0; row < N; ++row) {
-				for(int col = 0; col < N; ++col) {
-					int heightVal = scan.nextInt();
-					map[row][col] = heightVal;
-					if(maxHeight < heightVal) {
-						maxHeight = heightVal;
-					}
-				}
+			int[][] adjMatrix = new int[1001][1001];
+			
+			int tailVertex = 0;
+			int headVertex = 0;
+			for(int i = 0; i < M; ++i) {
+				tailVertex = scan.nextInt();
+				headVertex = scan.nextInt();
+				adjMatrix[tailVertex][headVertex] = 1;
 			}
 			
-			int answer = solve(N, K, map, maxHeight);
+			int answer = solve(N, K, adjMatrix);
 			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
 
-	private static int solve(int n, int k, int[][] map, int maxHeight) {
-		int maxNumberOfRoute;
-		maxNumberOfRoute = makeAllCases(n, k, map, maxHeight);
-		return maxNumberOfRoute;
-	}
-
-	private static int makeAllCases(int n, int k, int[][] map, int maxHeight) {
-		int ret = Integer.MAX_VALUE;
-		for(int row = 0; row < n; ++row) {
-			for(int col = 0; col < n; ++col) {
-				int heightVal = map[row][col];
-				if(heightVal == maxHeight) {
-					int tmp = countAllCases(row, col, 0, map);
-					if(ret > tmp) {
-						ret = tmp;
-					}
+	private static int solve(int n, int k, int[][] adjMatrix) {
+		Queue<Node> q = new LinkedList<>();
+		q.offer(new Node(1));
+		
+		while(!q.isEmpty()) {
+			Node node = q.poll();
+			int currTime = node.time;
+			if(node.tailVertex == n) {
+				if(currTime <= k) {
+					return currTime;
+				}
+			}
+			for(int headVertex = 1; headVertex < n+1; ++headVertex) {
+				if(adjMatrix[node.tailVertex][headVertex] == 1) {
+					q.offer(new Node(headVertex, currTime+1));
 				}
 			}
 		}
-		return ret;
+		
+		return -1;
 	}
+}
 
-	private static int countAllCases(int row, int col, int currVal, int[][] map) {
-		int nextVal = map[row][col];
-		if(currVal <= nextVal) {
-			return 1;
-		}
-		return 0;
+class Node {
+	int tailVertex;
+	int time;
+	
+	Node(int tailVertex) {
+		this.tailVertex = tailVertex;
+		this.time = 0;
+	}
+	
+	Node(int tailVertex, int time) {
+		this.tailVertex = tailVertex;
+		this.time = time;
 	}
 }

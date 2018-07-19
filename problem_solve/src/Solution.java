@@ -1,33 +1,37 @@
-import java.util.Arrays;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
-	static int[] numArr = new int[100000];
+	static Queue<Long> q = new PriorityQueue<Long>();
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for(int tc = 1; tc <= T; ++tc) {
 			int N = scan.nextInt();
 			for(int i = 0; i < N; ++i) {
-				int numVal = scan.nextInt();
-				numArr[i] = numVal;
+				q.offer(scan.nextLong());
 			}
 			
-			long answer = solve(N);
+			long answer = solve();
 			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
-	
-	private static long solve(int n) {
-		int result = sumAllNumbers(n, result);
-		return result;
-	}
 
-	private static int sumAllNumbers(int n, int result) {
-		if()
-		Arrays.sort(numArr, 0, n);
+	private static long solve() {
+		long ret = 0;
+		while(!q.isEmpty()) {
+			long tmp1 = q.poll();
+			long tmp2 = q.poll();
+			long sumTmp = tmp1 + tmp2;
+			ret += sumTmp;
+			if(q.isEmpty()) {
+				break;
+			}
+			q.offer(sumTmp);
+		}
 		
-		return 0;
+		return ret;
 	}
 }

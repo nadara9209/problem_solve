@@ -1,141 +1,193 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
-	static int[] NumArr = new int[10];
-	static int[] TimeArr = new int[28];
 	public static void main(String[] args) {
-		initNumArr();
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for(int tc = 1; tc <= T; ++tc) {
-			for(int i = 0; i < 28; ++i) {
-				int val = scan.nextInt();
-				TimeArr[i] = val;
+			int N = scan.nextInt();
+			
+			// create
+			int[][] map = new int[N][N];
+			for(int row = 0; row < N; ++row) {
+				for(int col = 0; col < N; ++col) {
+					int val = scan.nextInt();
+					map[row][col] = val;
+				}
 			}
 			
-			String answer = solve();
+			
+			int answer = solve(map, N);
 			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
 	
-	private static String solve() {
-		int nOfBroken = 0;
-		int id = 0;
-		Clock retClock = new Clock();
-		for(int i = 0; i <= 2; ++i) {
-			Clock tmpClock = checkAllCases(id, nOfBroken, i);
-			if(retClock.totalTime > tmpClock.totalTime) {
-				retClock = tmpClock;
-			}
-		}
-		String minTime = Integer.toString(retClock.totalTime / 100) + " " + 
-						 Integer.toString(retClock.totalTime % 100);
-		return minTime;
-	}
-
-	private static Clock checkAllCases(int id, int nOfBroken, int limitN) {
-		if(nOfBroken == limitN) {
-			Clock clock = new Clock(TimeArr);
-			if(clock.isVaild()) {
-				return clock;
-			}
-			else {
-				return new Clock();
+	private static int solve(int[][] map, int N) {
+		ArrayList<Person> personList = new ArrayList<>();
+		ArrayList<Stair> stairList = new ArrayList<>();
+		for(int row = 0; row < N; ++row) {
+			for(int col = 0; col < N; ++col) {
+				int val = map[row][col];
+				if(val == 1) {
+					personList.add(new Person(row, col));
+				}
+				else if(val > 1) {
+					stairList.add(new Stair(row, col, val));
+				}
 			}
 		}
 		
-		Clock ret = new Clock();
-		for(int i = id; i < TimeArr.length; ++i) {
-			inverse(i);
-			Clock tmp = checkAllCases(i+1, nOfBroken+1, limitN);
-			if(ret.totalTime > tmp.totalTime) {
-				ret = tmp;
+		int minTime = makeAllCases(personList, stairList);
+		return minTime;
+	}
+
+	private static int makeAllCases(ArrayList<Person> personList, ArrayList<Stair> stairList) {
+		int nPerson = personList.size();
+		ArrayList<Person> subCandidateList1 = new ArrayList<>();
+		
+		Stair stair1 = stairList.get(0);
+		Stair stair2 = stairList.get(1);
+		
+		int ret = Integer.MAX_VALUE;
+		
+		for(int i = 0; i < (1 << (nPerson)); ++i) {
+			ArrayList<Person> subCandidateList2 = (ArrayList<Person>) personList.clone();
+			subCandidateList1.clear();
+			for(int j = 0; j < nPerson; ++j) {
+				if((i & (1 << j)) != 0) {
+					subCandidateList1.add(personList.get(j));
+					subCandidateList2.removeAll(subCandidateList1);
+				}
 			}
-			inverse(i);
+			// Person 나눈 후
+			// 각 계단에 넣어주고
+			// 계단이 스스로 totalTime을 도출한다.
+			
+			stair1.candidateList = subCandidateList1;
+			stair2.candidateList = subCandidateList2;
+			
+			stair1.totalTime = 0;
+			stair2.totalTime = 0;
+			
+			stair1.process();
+			stair2.process();
+			
+			int tmp = 0;
+			if(stair1.totalTime == 0) {
+				tmp = stair2.totalTime;
+			}
+			else if(stair2.totalTime != 0 && stair1.totalTime != 0) {
+				tmp = (stair1.totalTime > stair2.totalTime) ? stair1.totalTime : stair2.totalTime;
+			}
+			else if(stair2.totalTime == 0) {
+				tmp = stair1.totalTime;
+			}
+			
+			if(ret > tmp) {
+				ret = tmp;
+			}	
 		}
 		return ret;
 	}
 
-	private static void inverse(int i) {
-		if(TimeArr[i] == 0) {
-			TimeArr[i] = 1;
-		}
-		else {
-			TimeArr[i] = 0;
-		}
-	}
+	static class Person implements Comparable<Person> {
+		int row;
+		int col;
+		int reachTime;
+		int processTime;
 
-	private static void initNumArr() {
-		NumArr[0] = 0b1111110;
-		NumArr[1] = 0b0000110;
-		NumArr[2] = 0b1011011;
-		NumArr[3] = 0b1001111;
-		NumArr[4] = 0b0100111;
-		NumArr[5] = 0b1101101;
-		NumArr[6] = 0b1111101;
-		NumArr[7] = 0b1000110;
-		NumArr[8] = 0b1111111;
-		NumArr[9] = 0b1101111;
+		Person(int row, int col) {
+			this.row = row;
+			this.col = col;
+			this.reachTime = 0;
+		}
+
+		public int compareTo(Person o) {
+			if(this.reachTime > o.reachTime) {
+				return 1;
+			}
+			else if(this.reachTime < o.reachTime) {
+				return -1;
+			}
+			else {
+				return 0;
+			}
+		}
+
+		public void setTime(int row, int col) {
+			this.reachTime = Math.abs(this.row - row) + Math.abs(this.col - col);
+		}
 	}
 	
-	static class Clock {
-		int totalVal;
+	static class Stair {
+		int row;
+		int col;
+		int limitTime;
+		int capacity;
 		int totalTime;
-		int time[];
-		int segment[];
+		LinkedList<Person> q;
+		ArrayList<Person> candidateList;
+		ArrayList<Person> selectedList;
 		
-		Clock(int[] timeArr) {
-			this.totalVal = 0;
-			int j = 0;
-			for(int i = timeArr.length-1; i >= 0; --i) {
-				this.totalVal += (timeArr[j++] << i);
-			}
-			
-			this.segment = new int[4];
-			for(int i = 0; i < 4; ++i) {
-				this.segment[i] = (((1<<7)-1) & (this.totalVal >> (i*7)));
-			}
-			
-			this.time = new int[4];
+		Stair(int row, int col, int limitTime) {
+			this.row = row;
+			this.col = col;
+			this.limitTime = limitTime;
+			this.capacity = 3;
 			this.totalTime = 0;
-		}
-		
-		public void setTotalTime() {
-			int ret = 0;
-			ret += this.time[3] * 1000 +
-				   this.time[2] * 100 +
-				   this.time[1] * 10 +
-				   this.time[0];
-			this.totalTime = ret;
+			this.q = new LinkedList<>();
+			this.candidateList = new ArrayList<>();
+			this.selectedList = new ArrayList<>();
 		}
 
-		Clock() {
-			this.totalTime = 9999;
-		}
-
-		public boolean isVaild() {
-			int cnt = 0;
-			for(int i = 0; i < 4; ++i) {
-				for(int j = 0; j < 10; ++j) {
-					if(this.segment[i] == NumArr[j]) {
-						this.time[i] = j;
-						this.totalTime += j * (Math.pow(10, i));
-						cnt++;
+		public void process() {
+			// candidate의 time 최신화 후 q에 넣기
+			for(int i = 0; i < this.candidateList.size(); ++i) {
+				Person p = candidateList.get(i);
+				p.setTime(this.row, this.col);
+				q.add(p);
+			}
+			
+			Collections.sort(q);
+			
+			while(!q.isEmpty()) {
+				// 타이머와 사람들의 도착시간을 비교 하여
+				while(!q.isEmpty() && q.peek().reachTime <= this.totalTime) {
+					if(this.selectedList.size() >= 3) {
+						break;
+					}
+					this.putOnPerson(q.removeFirst());
+				}
+				
+				// 전체 타이머 증가
+				this.timerProcess();
+				
+				for(int i = 0; i < this.selectedList.size(); ++i) {
+					Person p = selectedList.get(i);
+					if(p.processTime >= this.limitTime) {
+						selectedList.remove(i);
 					}
 				}
 			}
-			if(cnt == 4) {
-				int flag1 = (time[3] * 10) + time[2];
-				int flag2 = (time[1] * 10) + time[0];
-				if(flag1 > 23 || flag2 > 59) {
-					return false;
-				}
-				else {
-					return true;
-				}
+		}
+
+		private void timerProcess() {
+			this.totalTime++;
+			for(int i = 0; i < this.selectedList.size(); ++i) {
+				Person p = selectedList.get(i);
+				p.processTime++;
 			}
-			return false;
+		}
+
+		private void putOnPerson(Person p) {
+			p.processTime = -1;
+			this.selectedList.add(p);
 		}
 	}
 }

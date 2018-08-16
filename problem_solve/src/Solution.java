@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
@@ -11,28 +9,26 @@ public class Solution {
 		int T = scan.nextInt();
 		for(int tc = 1; tc <= T; ++tc) {
 			int N = scan.nextInt();
-			
 			// create
 			int[][] map = new int[N][N];
 			for(int row = 0; row < N; ++row) {
 				for(int col = 0; col < N; ++col) {
-					int val = scan.nextInt();
-					map[row][col] = val;
+					map[row][col] = scan.nextInt();
 				}
 			}
-			
-			
+			// answer
 			int answer = solve(map, N);
-			System.out.println("#" + tc + " " + answer);
+			System.out.println("#"+ tc + " " + answer);
 		}
 		scan.close();
 	}
-	
-	private static int solve(int[][] map, int N) {
-		ArrayList<Person> personList = new ArrayList<>();
+
+	private static int solve(int[][] map, int n) {
+		LinkedList<Person> personList = new LinkedList<>();
 		ArrayList<Stair> stairList = new ArrayList<>();
-		for(int row = 0; row < N; ++row) {
-			for(int col = 0; col < N; ++col) {
+		// needed lists create
+		for(int row = 0; row < n; ++row) {
+			for(int col = 0; col < n; ++col) {
 				int val = map[row][col];
 				if(val == 1) {
 					personList.add(new Person(row, col));
@@ -43,151 +39,205 @@ public class Solution {
 			}
 		}
 		
-		int minTime = makeAllCases(personList, stairList);
+		LinkedList<Person> selectedList = new LinkedList<>();
+		int startId = 0;
+		int minTime = checkAllCases(personList, stairList, selectedList, startId);
 		return minTime;
 	}
+	
 
-	private static int makeAllCases(ArrayList<Person> personList, ArrayList<Stair> stairList) {
-		int nPerson = personList.size();
-		ArrayList<Person> subCandidateList1 = new ArrayList<>();
+	private static int checkAllCases(LinkedList<Person> personList, ArrayList<Stair> stairList,
+			LinkedList<Person> selectedList, int currId) {
+		if(currId == personList.size()) {
+			return countTime(personList, stairList, selectedList);
+		}
+
+		// 선택
+		selectedList.add(personList.get(currId));
+		int caseA = checkAllCases(personList, stairList, selectedList, currId+1);
+		selectedList.removeLast();
+		
+		// 미선택
+		int caseB = checkAllCases(personList, stairList, selectedList, currId+1);
+		
+		return Math.min(caseA, caseB);
+	}
+
+
+	private static int countTime(LinkedList<Person> personList, ArrayList<Stair> stairList,
+			LinkedList<Person> selectedList) {
+		
+		LinkedList<Person> personTempList1 = (LinkedList<Person>) personList.clone();
+		LinkedList<Person> personTempList2 = (LinkedList<Person>) selectedList.clone();
+		personTempList1.removeAll(personTempList2);
 		
 		Stair stair1 = stairList.get(0);
 		Stair stair2 = stairList.get(1);
 		
-		int ret = Integer.MAX_VALUE;
+		stair1.candidateList = personTempList1;
+		stair2.candidateList = personTempList2;
 		
-		for(int i = 0; i < (1 << (nPerson)); ++i) {
-			ArrayList<Person> subCandidateList2 = (ArrayList<Person>) personList.clone();
-			subCandidateList1.clear();
-			for(int j = 0; j < nPerson; ++j) {
-				if((i & (1 << j)) != 0) {
-					subCandidateList1.add(personList.get(j));
-					subCandidateList2.removeAll(subCandidateList1);
-				}
-			}
-			// Person 나눈 후
-			// 각 계단에 넣어주고
-			// 계단이 스스로 totalTime을 도출한다.
-			
-			stair1.candidateList = subCandidateList1;
-			stair2.candidateList = subCandidateList2;
-			
-			stair1.totalTime = 0;
-			stair2.totalTime = 0;
-			
-			stair1.process();
-			stair2.process();
-			
-			int tmp = 0;
-			if(stair1.totalTime == 0) {
-				tmp = stair2.totalTime;
-			}
-			else if(stair2.totalTime != 0 && stair1.totalTime != 0) {
-				tmp = (stair1.totalTime > stair2.totalTime) ? stair1.totalTime : stair2.totalTime;
-			}
-			else if(stair2.totalTime == 0) {
-				tmp = stair1.totalTime;
-			}
-			
-			if(ret > tmp) {
-				ret = tmp;
-			}	
+		stair1.process();
+		stair2.process();
+		
+		if(stair1.totalTime == 0) {
+			return stair2.totalTime;
 		}
-		return ret;
+		else if(stair2.totalTime == 0) {
+			return stair1.totalTime;
+		}
+		else {
+			return (stair1.totalTime > stair2.totalTime) ? stair1.totalTime : stair2.totalTime;
+		}
+		
 	}
 
-	static class Person implements Comparable<Person> {
+	static class Person implements Comparable<Person>{
 		int row;
 		int col;
 		int reachTime;
-		int processTime;
-
+		
 		Person(int row, int col) {
 			this.row = row;
 			this.col = col;
 			this.reachTime = 0;
 		}
-
+		
+		public void setReachTime(int row, int col) {
+			this.reachTime = Math.abs(this.row - row) + Math.abs(this.col - col);
+		}
+		
+		@Override
 		public int compareTo(Person o) {
-			if(this.reachTime > o.reachTime) {
-				return 1;
-			}
-			else if(this.reachTime < o.reachTime) {
+			if(this.reachTime < o.reachTime) {
 				return -1;
+			}
+			else if(this.reachTime > o.reachTime) {
+				return 1;
 			}
 			else {
 				return 0;
-			}
-		}
-
-		public void setTime(int row, int col) {
-			this.reachTime = Math.abs(this.row - row) + Math.abs(this.col - col);
+			}	
 		}
 	}
 	
 	static class Stair {
 		int row;
 		int col;
-		int limitTime;
-		int capacity;
+		int processTime;
 		int totalTime;
-		LinkedList<Person> q;
-		ArrayList<Person> candidateList;
-		ArrayList<Person> selectedList;
+		LinkedList<Person> candidateList;
+		ArrayList<State> stateList;
 		
-		Stair(int row, int col, int limitTime) {
+		Stair(int row, int col, int processTime) {
 			this.row = row;
 			this.col = col;
-			this.limitTime = limitTime;
-			this.capacity = 3;
+			this.processTime = processTime;
 			this.totalTime = 0;
-			this.q = new LinkedList<>();
-			this.candidateList = new ArrayList<>();
-			this.selectedList = new ArrayList<>();
+			this.candidateList = new LinkedList<>();
+			this.stateList = new ArrayList<State>(3);
+			for(int i = 0; i < 3; ++i) {
+				stateList.add(new State());
+			}
 		}
-
+		
+		// candidateList를 정렬하고
+		// 3개씩 처리해서 total 소요 시간 최신화
 		public void process() {
-			// candidate의 time 최신화 후 q에 넣기
+			if(this.candidateList.size() == 0) {
+				this.totalTime = 0;
+				return;
+			}
+			
 			for(int i = 0; i < this.candidateList.size(); ++i) {
-				Person p = candidateList.get(i);
-				p.setTime(this.row, this.col);
-				q.add(p);
+				this.candidateList.get(i).setReachTime(this.row, this.col);
 			}
+			Collections.sort(this.candidateList);
 			
-			Collections.sort(q);
-			
-			while(!q.isEmpty()) {
-				// 타이머와 사람들의 도착시간을 비교 하여
-				while(!q.isEmpty() && q.peek().reachTime <= this.totalTime) {
-					if(this.selectedList.size() >= 3) {
-						break;
+			this.setTime();
+		}
+
+		private void setTime() {
+			int time = 0;
+			while(true) {
+				time++;
+				for(int i = 0; i < this.stateList.size(); ++i) {
+					if(!stateList.get(i).usable) {
+						// 기다리지 않은
+						if(!stateList.get(i).isWait) {
+							if((time - stateList.get(i).startTime) == this.processTime+1) {
+								stateList.get(i).usable = true;
+								if(this.candidateList.isEmpty() && this.isAllUsable()) {
+									this.totalTime = time;
+									return;
+								}
+							}
+						}
+						// 기다린
+						else if(stateList.get(i).isWait) {
+							if((time - stateList.get(i).startTime) == this.processTime) {
+								stateList.get(i).usable = true;
+								if(this.candidateList.isEmpty() && this.isAllUsable()) {
+									this.totalTime = time;
+									return;
+								}
+							}
+						}
 					}
-					this.putOnPerson(q.removeFirst());
 				}
 				
-				// 전체 타이머 증가
-				this.timerProcess();
-				
-				for(int i = 0; i < this.selectedList.size(); ++i) {
-					Person p = selectedList.get(i);
-					if(p.processTime >= this.limitTime) {
-						selectedList.remove(i);
+				int removeN = 0;
+				for(int i = 0; i < this.candidateList.size(); ++i) {
+					Person p = this.candidateList.get(i);
+					for(int j = 0; j < this.stateList.size(); ++j) {
+						if(stateList.get(j).usable) {
+							// 기다리지 않은
+							if(time == p.reachTime) {
+								stateList.get(j).startTime = time;
+								stateList.get(j).usable = false;
+								stateList.get(j).isWait = false;
+								removeN++;
+								break;
+							}
+							// 기다린
+							else if(time > p.reachTime) {
+								stateList.get(j).startTime = time;
+								stateList.get(j).usable = false;
+								stateList.get(j).isWait = true;
+								removeN++;
+								break;
+							}
+						}
 					}
+				}
+				
+				for(int i = 0; i < removeN; ++i) {
+					candidateList.remove(0);
 				}
 			}
 		}
 
-		private void timerProcess() {
-			this.totalTime++;
-			for(int i = 0; i < this.selectedList.size(); ++i) {
-				Person p = selectedList.get(i);
-				p.processTime++;
+		private boolean isAllUsable() {
+			for(int i = 0; i < this.stateList.size(); ++i) {
+				if(!this.stateList.get(i).usable) {
+					return false;
+				}
 			}
+			return true;
 		}
-
-		private void putOnPerson(Person p) {
-			p.processTime = -1;
-			this.selectedList.add(p);
+	}
+	
+	static class State {
+		boolean usable;
+		int startTime;
+		int consumedTime;
+		boolean isWait;
+		
+		State() {
+			this.usable = true;
+			this.startTime = 0;
+			this.consumedTime = 0;
+			this.isWait = true;
 		}
 	}
 }

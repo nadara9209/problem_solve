@@ -11,16 +11,11 @@ public class Main {
 		numbers[0] = 0;
 		numbers[1] = 1;
 		
-		long answer = solve(n);
-		System.out.println(answer);
-		scan.close();
-	}
-	
-	private static long solve(int n) {
-		if(numbers[n] != -1) {
-			return numbers[n];
+		for(int i = 2; i <= n; i++) {
+			numbers[i] = numbers[i-1] + numbers[i-2];
 		}
 		
-		return numbers[n] = (solve(n-1)+ solve(n-2));
+		System.out.println(numbers[n]);
+		scan.close();
 	}
 }

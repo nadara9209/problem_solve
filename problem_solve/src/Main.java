@@ -1,71 +1,109 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Scanner;
 
 public class Main {
-	static String[] COMMANDS = {"pus", "pop", "siz", "emp", "fro", "bac"};
-	static LinkedList<String> commands;
-	static ArrayList<String> stack;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int N = scan.nextInt();
-		scan.nextLine();
-	
-		commands = new LinkedList<>();
+		
+		Tree tree = new Tree();
 		for(int i = 0; i < N; ++i) {
-			commands.add(scan.nextLine());
+			String data1 = scan.next();
+			String data2 = scan.next();
+			String data3 = scan.next();
+			tree.add(data1.charAt(0), data2.charAt(0), data3.charAt(0));
 		}
 		
-		stack = new ArrayList<>();
-		doStacks();
+		tree.preorder(tree.root);
+		System.out.println();
+		tree.inorder(tree.root);
+		System.out.println();
+		tree.postorder(tree.root);
+		System.out.println();
 		
 		scan.close();
 	}
+}
+
+class Node {
+	char data;
+	Node left, right;
 	
-	private static void doStacks() {
-		int limit = commands.size();
-		for(int i = 0; i < limit; ++i) {
-			String str = commands.removeFirst();
-			String command = str.substring(0, 3);
-			
-			if(COMMANDS[0].equals(command)) {
-				stack.add(str.substring(5,str.length()));
+	public Node(char data) {
+		this.data = data;
+	}
+}
+
+class Tree {
+	Node root; // root
+	
+	public Tree() {
+		this.root = null;
+	}
+	
+	public void add(char data, char leftData, char rightData) {
+		if(this.root == null) { // 초기접근
+			if(data != '.') {
+				this.root = new Node(data);
 			}
-			else if(COMMANDS[1].equals(command)) {
-				if(stack.isEmpty()) {
-					System.out.println(-1);
-				}
-				else {
-					System.out.println(stack.remove(0));
-				}
+			if(leftData != '.') {
+				this.root.left = new Node(leftData);
 			}
-			else if(COMMANDS[2].equals(command)) {
-				System.out.println(stack.size());
-			}
-			else if(COMMANDS[3].equals(command)) {
-				if(stack.isEmpty()) {
-					System.out.println(1);
-				}
-				else {
-					System.out.println(0);
-				}
-			}
-			else if(COMMANDS[4].equals(command)) {
-				if(stack.isEmpty()) {
-					System.out.println(-1);
-				}
-				else {
-					System.out.println(stack.get(0));
-				}
-			}
-			else if(COMMANDS[5].equals(command)) {
-				if(stack.isEmpty()) {
-					System.out.println(-1);
-				}
-				else {
-					System.out.println(stack.get(stack.size()-1));
-				}
+			if(rightData != '.') {
+				this.root.right = new Node(rightData);
 			}
 		}
+		else { // after rooted
+			search(this.root, data, leftData, rightData);
+		}
+	}
+	
+	private void search(Node root, char data, char leftData, char rightData) {
+		// reached root is null(삽입위치를 못찾은 경우)
+		if(root == null) {
+			return;
+		}
+		else if(root.data == data) {
+			if(leftData != '.') {
+				root.left = new Node(leftData);
+			}
+			if(rightData != '.') {
+				root.right = new Node(rightData);
+			}
+		}
+		else {
+			search(root.left, data, leftData, rightData); // left
+			search(root.right, data, leftData, rightData); // right
+		}
+	}
+	
+	// 전위순회 중앙 좌 우
+	public void preorder(Node root) {
+		System.out.print(root.data);
+		if(root.left != null) {
+			preorder(root.left);
+		}
+		if(root.right != null) {
+			preorder(root.right);
+		}
+	}
+	// 중위순회 좌 중앙 우
+	public void inorder(Node root) {
+		if(root.left != null) {
+			inorder(root.left);
+		}
+		System.out.print(root.data);
+		if(root.right != null) {
+			inorder(root.right);
+		}
+	}
+	// 후위순회 좌 우 중앙
+	public void postorder(Node root) {
+		if(root.left != null) {
+			postorder(root.left);
+		}
+		if(root.right != null) {
+			postorder(root.right);
+		}
+		System.out.print(root.data);
 	}
 }

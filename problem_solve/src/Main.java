@@ -3,43 +3,50 @@ import java.util.Scanner;
 public class Main {
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
-		
 		int N = scan.nextInt();
-		long M = scan.nextLong();
+		int M = scan.nextInt();
+		int maxVal = 0;
 		
-		int[] Numbers = new int[N];
+		int[] Trees = new int[N];
 		for(int i = 0; i < N; ++i) {
-			Numbers[i] = scan.nextInt();
+			int val = scan.nextInt();
+			if(maxVal < val) {
+				maxVal = val;
+			}
+			Trees[i] = val;
 		}
 		
-		int answer = solve(Numbers, N, M);
+		int answer = solve(maxVal, N, M, Trees);
 		System.out.println(answer);
 		scan.close();
 	}
 
-	private static int solve(int[] numbers, int n, long m) {
-		int startId = 0;
-		int endId = 0;
-		int cnt = 0;
+	private static int solve(int maxVal, int n, int m, int[] trees) {
+		int left = 0;
+		int right = maxVal;
+		int ret = 0;
 		
-		while(endId <= n-1) {
-			long result = 0;
-			for(int i = startId; i <= endId; ++i) {
-				result += numbers[i];
+		while(left <= right) {
+			int mid = (left + right) / 2;
+			long sum = 0;
+			
+			for(int i = 0; i < n; ++i) {
+				if(mid < trees[i]) {
+					sum += trees[i] - mid;
+				}
 			}
 			
-			if(result < m) {
-				endId++;
-			}
-			else if(result == m) {
-				endId++;
-				cnt++;
+			if(sum >= m) {
+				if(ret < mid) {
+					ret = mid;
+				}
+				left = mid + 1;
 			}
 			else {
-				startId++;
+				right = mid - 1;
 			}
 		}
 		
-		return cnt;
+		return ret;
 	}
 }

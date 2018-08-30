@@ -1,115 +1,57 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Scanner;
 
 public class Main {
-	public static void main(String[] args) throws IOException {
-//		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-//		String str = in.readLine();
-		
+	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int N = scan.nextInt();
+		int M = scan.nextInt();
+		int K = scan.nextInt();
 		
-		Tree tree = new Tree();
+		int[] numbers = new int[N];
 		for(int i = 0; i < N; ++i) {
-			String data1 = scan.next();
-			String data2 = scan.next();
-			String data3 = scan.next();
-			tree.add(data1.charAt(0), data2.charAt(0), data3.charAt(0));
+			numbers[i] = scan.nextInt();
 		}
 		
-		tree.preorder(tree.root);
-		System.out.println();
-		tree.inorder(tree.root);
-		System.out.println();
-		tree.postorder(tree.root);
-		System.out.println();
+		int nOfQ = M+K;
+		int[][] questions = new int[nOfQ][3];
+		for(int i = 0; i < nOfQ; ++i) {
+			int command = scan.nextInt();
+			int src = scan.nextInt();
+			int dst = scan.nextInt();
+			
+			questions[i][0] = command;
+			questions[i][1] = src;
+			questions[i][2] = dst;
+		}
 		
+		solve(nOfQ, numbers, questions);
 		scan.close();
 	}
-}
 
-class Node {
-	char data;
-	Node left, right;
-	
-	public Node(char data) {
-		this.data = data;
+	private static void solve(int nOfQ, int[] numbers, int[][] questions) {
+		int[] sumsOfN = new int[numbers.length];
+		sumsOfN[0] = numbers[0];
+		// 누적합계배열 생성
+		// 모배열의 변화가 없을 경우만 사용가능
+		// 변화 발생시 누적합계과정 다시 진행.
+		for(int i = 1; i < numbers.length; ++i) {
+			sumsOfN[i] = sumsOfN[i-1] + numbers[i];
+		}
+		
+		for(int i = 0; i < nOfQ; ++i) {
+			int command = questions[i][0];
+			int src = questions[i][1] - 1;
+			int dst = questions[i][2] - 1;
+			
+			if(command == 2) {
+				System.out.println(sumsOfN[dst] - sumsOfN[src-1]);
+			}
+			else {
+				// 모배열의 변화가 발생하게 되므로
+				// 누적합 배열생성 만으로 해결할 경우
+				// tle 발생
+			}
+		}
 	}
-}
 
-class Tree {
-	Node root; // root
-	
-	public Tree() {
-		this.root = null;
-	}
-	
-	public void add(char data, char leftData, char rightData) {
-		if(this.root == null) { // 초기접근
-			if(data != '.') {
-				this.root = new Node(data);
-			}
-			if(leftData != '.') {
-				this.root.left = new Node(leftData);
-			}
-			if(rightData != '.') {
-				this.root.right = new Node(rightData);
-			}
-		}
-		else { // after rooted
-			search(this.root, data, leftData, rightData);
-		}
-	}
-	
-	private void search(Node root, char data, char leftData, char rightData) {
-		// reached root is null(삽입위치를 못찾은 경우)
-		if(root == null) {
-			return;
-		}
-		else if(root.data == data) {
-			if(leftData != '.') {
-				root.left = new Node(leftData);
-			}
-			if(rightData != '.') {
-				root.right = new Node(rightData);
-			}
-		}
-		else {
-			search(root.left, data, leftData, rightData); // left
-			search(root.right, data, leftData, rightData); // right
-		}
-	}
-	
-	// 전위순회 중앙 좌 우
-	public void preorder(Node root) {
-		System.out.print(root.data);
-		if(root.left != null) {
-			preorder(root.left);
-		}
-		if(root.right != null) {
-			preorder(root.right);
-		}
-	}
-	// 중위순회 좌 중앙 우
-	public void inorder(Node root) {
-		if(root.left != null) {
-			inorder(root.left);
-		}
-		System.out.print(root.data);
-		if(root.right != null) {
-			inorder(root.right);
-		}
-	}
-	// 후위순회 좌 우 중앙
-	public void postorder(Node root) {
-		if(root.left != null) {
-			postorder(root.left);
-		}
-		if(root.right != null) {
-			postorder(root.right);
-		}
-		System.out.print(root.data);
-	}
 }

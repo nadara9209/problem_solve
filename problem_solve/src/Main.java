@@ -31,7 +31,7 @@ public class Main {
 		ArrayList<Integer> retList = new ArrayList<>();
 		Queue<Integer> q = new LinkedList<>();
 		for (int i = 1; i <= n; ++i) {
-			if(indegrees[i] == 0) {
+			if (indegrees[i] == 0) {
 				q.offer(i);
 			}
 		}
@@ -43,7 +43,7 @@ public class Main {
 				for (int i = 0; i < adjList[studentA].size(); ++i) {
 					int studentB = adjList[studentA].get(i);
 					indegrees[studentB]--;
-					if(indegrees[studentB] == 0) {
+					if (indegrees[studentB] == 0) {
 						q.offer(studentB);
 					}
 				}

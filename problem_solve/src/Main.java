@@ -1,99 +1,80 @@
 import java.util.Scanner;
 
 public class Main {
+	static int[] parent;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
-		int N = scan.nextInt();
-		int M = scan.nextInt();
-		int K = scan.nextInt();
+		int n = scan.nextInt();
+		int m = scan.nextInt();
+		parent = new int[n+1];
 		
-		int[] numbers = new int[N];
-		for (int i = 0; i < N; ++i) {
-			numbers[i] = scan.nextInt();
-		}
-		
-		int limit = M+K;
-		Command[] commands = new Command[limit];
-		for (int i = 0; i < limit; ++i) {
+		Command[] commands = new Command[m];
+		for (int i = 0; i < m; ++i) {
 			int command = scan.nextInt();
-			int src = scan.nextInt();
-			int dst = scan.nextInt();
-			commands[i] = new Command(command, src, dst);
+			int setA = scan.nextInt();
+			int setB = scan.nextInt();
+			commands[i] = new Command(command, setA, setB);
 		}
 		
-		solve(numbers, commands, limit);
+		solve(commands);
 		scan.close();
 	}
 
-	private static void solve(int[] numbers, Command[] commands, int limit) {
-		// create segment Tree
-		int n = numbers.length;
-		double log2N = Math.log(n) / Math.log(2);  
-		int h = (int)Math.ceil(log2N);
-		long[] segTree = new long[(1 << (h+1))]; 
-		init(numbers, segTree, 1, 0, n-1);
-		
+	private static void solve(Command[] commands) {
+		init(parent);
 		for (int i = 0; i < commands.length; ++i) {
 			Command c = commands[i];
-			switch (c.command) {
-			case 1:
-				c.src -= 1;
-				int val = c.dst - numbers[c.src];
-				numbers[c.src] = val;
-				update(segTree, 1, 0, n-1, c.src, val);
+			int command = c.command;
+			switch (command) {
+			case 0:
+				union(c.setA, c.setB);
 				break;
-			case 2:
-				long sum = sum(segTree, 1, 0, n-1, c.src-1, c.dst-1);
-				System.out.println(sum);
+			case 1:		
+				if (find(c.setA) != find(c.setB)) {
+					System.out.println("NO");
+				}
+				else {
+					System.out.println("YES");
+				}
 				break;
 			default:
 				break;
 			}
 		}
 	}
+	
+	
+	private static void union(int setA, int setB) {
+		int rootOfA = find(setA);
+		int rootOfB = find(setB);
+		parent[rootOfB] = rootOfA;
+	}
 
-	private static long init(int[] numbers, long[] segTree, int node, int start, int end) {
-		if (start == end) {
-			return segTree[node] = numbers[start];
+	private static int find(int setA) {
+		if(parent[setA] == setA) {
+			return setA;
 		}
 		else {
-			return segTree[node] = init(numbers, segTree, node*2, start, (start+end)/2) 
-									+ init(numbers, segTree, node*2+1, (start+end)/2+1, end);
+			return parent[setA] = find(parent[setA]);
 		}
 	}
-	
-	private static long sum(long[] segTree, int node, int start, int end, int left, int right) {
-		if (left > end || right < start) {
-			return 0;
+
+	// 초기에 각 배열의 원소를 자신으로 지정 
+	private static void init(int[] parent) {
+		for (int i = 0; i < parent.length; ++i) {
+			parent[i] = i;
 		}
-		if (left <= start && right >= end) {
-			return segTree[node];
-		}
-		return sum(segTree, node*2, start, (start+end)/2, left, right) +
-			   sum(segTree, node*2+1, (start+end)/2+1, end, left, right);
-	}
-	
-	// lazy propagation
-	private static void update(long[] segTree, int node, int start, int end, int index, long val) {
-		if (index < start || index > end) {
-			return;
-		}
-		segTree[node] = segTree[node] + val;
-		if (start != end) {
-			update(segTree, node*2, start, (start+end)/2, index, val);
-			update(segTree, node*2+1, (start+end)/2+1, end, index, val);
-		}
-	}
+	}	
 }
 
 class Command {
 	int command;
-	int src;
-	int dst;
+	int setA;
+	int setB;
 	
-	public Command(int command, int src, int dst) {
+	public Command(int command, int setA, int setB) {
 		this.command = command;
-		this.src = src;
-		this.dst = dst;
+		this.setA = setA;
+		this.setB = setB;
 	}
 }

@@ -9,7 +9,7 @@ public class Main {
 		int N = scan.nextInt();
 		int M = scan.nextInt();
 		indegrees = new int[N+1];
-		adjList = new ArrayList[N+1];
+		adjList = new (ArrayList<Integer>)ArrayList[N+1];
 		for (int i = 1; i < N+1; ++i) {
 			adjList[i] = new ArrayList<>();
 		}

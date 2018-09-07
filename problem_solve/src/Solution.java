@@ -1,93 +1,70 @@
 import java.util.Scanner;
 
 public class Solution {
-	private static final double ERROR_WIDTH = Math.pow(10, -12);
-	static Point[] points;
-	static int N;
+	static int limitCnt;
+	static String prize;
+	static int[][] memo = new int[1000000][20]; 
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
+	
 		for (int tc = 1; tc <= T; ++tc) {
-			N = scan.nextInt();
+			prize = scan.next();
+			limitCnt = scan.nextInt();
 			
-			points = new Point[N];
-			for (int i = 0; i < N; ++i) {
-				points[i] = new Point();
-			}
-			
-			for (int i = 0; i < N; ++i) {
-				points[i].setX(scan.nextInt());
-			}
-			for (int i = 0; i < N; ++i) {
-				points[i].setM(scan.nextInt());
-			}
-			
-			System.out.print("#" + tc + " ");
-			solve();
+			int answer = solve();
+			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
-	
-	private static void solve() {
-		for (int i = 0; i < points.length-1; ++i) {
-			double answer = search(i);
-			System.out.printf("%.10f ", answer);
-		}
-		System.out.println();
-	}
 
-	private static double search(int id) {
-		double left = points[id].x;
-		double right = points[id+1].x;
+	private static int solve() {
+		int[] numbers = new int[prize.length()];
+		for (int i = 0; i < numbers.length; ++i) {
+			numbers[i] = prize.charAt(i) - '0';
+		}
 		
-		while (left <= right) {
-			double mid = (left + right) / 2;
-			
-			double sumOfLeft = 0;
-			double sumOfRight = 0;
-			for (int i = 0; i < id+1; ++i) {
-				double d = Math.abs(mid - points[i].x);
-				sumOfLeft += (points[i].m / (d*d));
-			}
-			for (int i = id+1; i < points.length; ++i) {
-				double d = Math.abs(mid - points[i].x);
-				sumOfRight += (points[i].m / (d*d));
-			}
-			
-			if (right - left < ERROR_WIDTH) {
-				return mid;
-			}
-			
-			if (sumOfLeft < sumOfRight) {
-				right = mid;
-			}
-			else if (sumOfLeft > sumOfRight) {
-				left = mid;
-			}
-			else {
-				return mid;
+		int maxMoney = makeAllCases(numbers, 0);
+		return maxMoney;
+	}
+
+	private static int makeAllCases(int[] numbers, int cnt) {
+		if(memo[getSum(numbers)][cnt] != 0) {
+			return memo[getSum(numbers)][cnt];
+		}
+		if(cnt == limitCnt) {
+			return getSum(numbers);
+		}
+		
+		int ret = 0;
+		for (int i = 0; i < numbers.length-1; ++i) {
+			for (int j = i+1; j < numbers.length; ++j) {
+				int tmp = makeAllCases(swap(numbers, i, j), cnt+1);
+				if(ret < tmp) {
+					ret = tmp;
+				}
 			}
 		}
-		return -1;
+		return memo[getSum(numbers)][cnt] = ret;
 	}
 
-	
-}
-
-class Point {
-	int x;
-	int m;
-
-	public Point() {
-		this.x = 0;
-		this.m = 0;
+	private static int getSum(int[] numbers) {
+		int ret = 0;
+		int cnt = numbers.length-1;
+		for (int i = 0; i < numbers.length; ++i) {
+			ret += numbers[i] * (Math.pow(10, cnt--));
+		}
+		return ret;
 	}
-	
-	public void setX(int x) {
-		this.x = x;
-	}
-	
-	public void setM(int m) {
-		this.m = m;
+
+	private static int[] swap(int[] numbers, int i, int j) {
+		int[] tmp = numbers.clone();
+		if(tmp[i] != tmp[j]) {
+			tmp[i] ^= tmp[j];
+			tmp[j] ^= tmp[i];
+			tmp[i] ^= tmp[j];
+		}
+		
+		return tmp;
 	}
 }

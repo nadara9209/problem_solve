@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-class Main {
+public class Main {
 	static int N;
 	static int M;
 	static int[] Drow = {-1, 1, 0, 0,}; 

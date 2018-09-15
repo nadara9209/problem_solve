@@ -4,9 +4,10 @@ public class Solution {
 	static int V;
 	static int E;
 	static int[][] Tree;
-	static int[] Parent;
+	static int[][] Parent;
 	static int[] Depth;
 	static int[] Size;
+	static final int MAX_LIMIT = 14;	// 2^14 >= 10000
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
@@ -14,7 +15,7 @@ public class Solution {
 			V = scan.nextInt();
 			E = scan.nextInt();
 			Tree = new int[V+1][2];
-			Parent = new int[V+1];
+			Parent = new int[V+1][MAX_LIMIT+1];
 			Depth = new int[V+1];
 			Size = new int[V+1];
 			int nodeA = scan.nextInt();
@@ -28,7 +29,18 @@ public class Solution {
 				else {
 					Tree[pNode][0] = cNode;
 				}
-				Parent[cNode] = pNode;
+				// 순서가 정해져 있지 않다면 순회 후 부모 : 자식 관계 지정
+				Parent[cNode][0] = pNode;
+			}
+			
+			// 모든 Parent[i][0]를 구해놨기 때문에
+			for (int i = 0; i < MAX_LIMIT; ++i) {
+				
+				for (int j = 1; j <= V; ++j) {
+					if (Parent[j][i] != 0) {
+						Parent[j][i+1] = Parent[Parent[j][i]][i];
+					}
+				}
 			}
 			
 			traversal(1, 0);
@@ -63,13 +75,21 @@ public class Solution {
 		int high = Depth[nodeA] > Depth[nodeB] ? nodeB : nodeA;
 		
 		int gap = Depth[low] - Depth[high];
-		for (int i = 0; i < gap; ++i) {
-			low = Parent[low];
+		for (int i = 0; gap != 0; ++i) {
+			if ((gap % 2) == 0) {
+				low = Parent[low][i];
+			}
+			gap /= 2;
 		}
 		
-		while(low != high) {
-			low = Parent[low];
-			high = Parent[high];
+		if (low != high) {
+			for (int i = MAX_LIMIT; i >= 0; --i) {
+				if (Parent[low][i] != 0 && Parent[low][i] != Parent[high][i]) {
+					low = Parent[low][i];
+					high = Parent[high][i];
+				}
+			}
+			low = Parent[low][0];
 		}
 		
 		return low;

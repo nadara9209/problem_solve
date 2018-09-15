@@ -1,98 +1,68 @@
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class Solution {
-	static int V;
-	static int E;
-	static int[][] Tree;
-	static int[][] Parent;
-	static int[] Depth;
-	static int[] Size;
-	static final int MAX_LIMIT = 14;	// 2^14 >= 10000
-	public static void main(String[] args) {
-		Scanner scan = new Scanner(System.in);
-		int T = scan.nextInt();
-		for (int tc = 1; tc <= T; ++tc) {
-			V = scan.nextInt();
-			E = scan.nextInt();
-			Tree = new int[V+1][2];
-			Parent = new int[V+1][MAX_LIMIT+1];
-			Depth = new int[V+1];
-			Size = new int[V+1];
-			int nodeA = scan.nextInt();
-			int nodeB = scan.nextInt();
-			for (int i = 0; i < E; ++i) {
-				int pNode = scan.nextInt();
-				int cNode = scan.nextInt();
-				if (Tree[pNode][0] != 0) {
-					Tree[pNode][1] = cNode;
-				}
-				else {
-					Tree[pNode][0] = cNode;
-				}
-				// 순서가 정해져 있지 않다면 순회 후 부모 : 자식 관계 지정
-				Parent[cNode][0] = pNode;
+class Solution {
+	static String[] expr = {"님이 들어왔습니다.",
+					   	    "님이 나갔습니다."};
+    public String[] solution(String[] record) {
+    	HashMap<String, String> userMap = new HashMap<>();
+    	// order
+    	ArrayList<Order> orderList = new ArrayList<>();
+    	String[] answer = solve(record, userMap, orderList);
+        return answer;
+    }
+
+	private String[] solve(String[] record, HashMap<String, String> userMap, ArrayList<Order> orderList) {
+		String[] answer;
+		for (int i = 0; i < record.length; ++i) {
+			String str = record[i];
+			String[] temp = str.split(" ");
+			
+			String command = temp[0];
+			String uId = temp[1];
+			String name = "";
+			if (temp.length == 3) {
+				name = temp[2];
 			}
 			
-			// 모든 Parent[i][0]를 구해놨기 때문에
-			for (int i = 0; i < MAX_LIMIT; ++i) {
-				
-				for (int j = 1; j <= V; ++j) {
-					if (Parent[j][i] != 0) {
-						Parent[j][i+1] = Parent[Parent[j][i]][i];
-					}
-				}
+			switch (command.charAt(0)) {
+			case 'E':
+				userMap.put(uId, name);
+				orderList.add(new Order(uId, 0));
+				break;
+			case 'L':
+				orderList.add(new Order(uId, 1));
+				break;
+			case 'C':
+				userMap.put(uId, name);
+				break;
+			default:
+				break;
 			}
-			
-			traversal(1, 0);
-			
-			String answer = solve(nodeA, nodeB);
-			System.out.println("#" + tc + " " + answer);
-		}
-		scan.close();
-	}
-	
-	private static int traversal(int node, int depth) {
-		int cnt = 0;
-		if (node != 0) {
-			cnt++;
-			cnt += traversal(Tree[node][0], depth+1);
-			cnt += traversal(Tree[node][1], depth+1);
 		}
 		
-		Depth[node] = depth;
-		Size[node] = cnt;
+		answer = new String[orderList.size()];
 		
-		return cnt;
-	}
-
-	private static String solve(int nodeA, int nodeB) {
-		int lca = getLca(nodeA, nodeB);
-		return Integer.toString(lca) + " " + Integer.toString(Size[lca]);
-	}
-
-	private static int getLca(int nodeA, int nodeB) {
-		int low = Depth[nodeA] > Depth[nodeB] ? nodeA : nodeB;
-		int high = Depth[nodeA] > Depth[nodeB] ? nodeB : nodeA;
-		
-		int gap = Depth[low] - Depth[high];
-		for (int i = 0; gap != 0; ++i) {
-			if ((gap % 2) == 0) {
-				low = Parent[low][i];
+		for (int i = 0; i < orderList.size(); ++i) {
+			String uId = orderList.get(i).uId;
+			int exprNum = orderList.get(i).exprNum;
+			if (exprNum == 0) {
+				answer[i] = userMap.get(uId) + expr[exprNum];
 			}
-			gap /= 2;
-		}
-		
-		if (low != high) {
-			for (int i = MAX_LIMIT; i >= 0; --i) {
-				if (Parent[low][i] != 0 && Parent[low][i] != Parent[high][i]) {
-					low = Parent[low][i];
-					high = Parent[high][i];
-				}
+			else {
+				answer[i] = userMap.get(uId) + expr[exprNum];
 			}
-			low = Parent[low][0];
 		}
-		
-		return low;
+		return answer;
 	}
 }
 
+class Order {
+	String uId;
+	int exprNum;
+	
+	public Order(String uId, int exprNum) {
+		this.uId = uId;
+		this.exprNum = exprNum;
+	}
+}

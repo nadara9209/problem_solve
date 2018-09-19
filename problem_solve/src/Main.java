@@ -54,13 +54,13 @@ public class Main {
 		
 		// 선택
 		selectedList.add(candidateList.get(currId));
-		int case1 = makeAllCases(selectedList, candidateList, currId+1);
+		int caseA = makeAllCases(selectedList, candidateList, currId+1);
 		selectedList.remove(selectedList.size()-1);
 		
 		// 미선택
-		int case2 = makeAllCases(selectedList, candidateList, currId+1);
+		int caseB = makeAllCases(selectedList, candidateList, currId+1);
 		
-		return Math.min(case1, case2);
+		return Math.min(caseA, caseB);
 	}
 
 	private static int operateSumOfDistance(ArrayList<Point> selectedList) {
@@ -68,14 +68,14 @@ public class Main {
 		for(int i = 0; i < selectedList.size(); ++i) {
 			q.offer(selectedList.get(i));
 		}
-		int[][] visited = new int[N+1][N+1];
+		boolean[][] visited = new boolean[N+1][N+1];
 		int sumOfDistance = 0;
 		while(!q.isEmpty()) {
 			Point p = q.poll();
 			for(int i = 0; i < 4; ++i) {
 				int nextRow = p.curRow + Drow[i];
 				int nextCol = p.curCol + Dcol[i];
-				if(!isValid(nextRow, nextCol) || visited[nextRow][nextCol] == 1) {
+				if(!isValid(nextRow, nextCol) || visited[nextRow][nextCol]) {
 					continue;
 				}
 				if(map[nextRow][nextCol] == 1) {
@@ -83,7 +83,7 @@ public class Main {
 					int valCol = p.srcCol - nextCol;
 					sumOfDistance += Math.abs(valRow) + Math.abs(valCol);
 				}
-				visited[nextRow][nextCol] = 1;
+				visited[nextRow][nextCol] = true;
 				q.offer(new Point(p.srcRow, p.srcCol, nextRow, nextCol));
 			}
 		}
@@ -100,7 +100,8 @@ class Point {
 	int srcCol;
 	int curRow;
 	int curCol;
-	Point(int srcRow, int srcCol, int curRow, int curCol) {
+	
+	public Point(int srcRow, int srcCol, int curRow, int curCol) {
 		this.srcRow = srcRow;
 		this.srcCol = srcCol;
 		this.curRow = curRow;

@@ -1,9 +1,16 @@
 public class Main {
 	public static void main(String[] args) {
 		Solution sol = new Solution();
-		int[] food_times = {3, 1, 2};
-		long k = 5;
-		sol.solution(food_times, k);
+		
+		final String[][] INPUT_relation = {{"100", "ryan", "music", "2"}, 
+					 {"200", "apeach", "math", "2"}, 
+					 {"300", "tube", "computer", "3"}, 
+					 {"400", "con", "computer", "4"}, 
+					 {"500", "muzi", "music", "3"}, 
+					 {"600", "apeach", "music", "2"}};
+		
+		int answer = sol.solution(INPUT_relation);
+		System.out.println(answer);
 	}
 }
 

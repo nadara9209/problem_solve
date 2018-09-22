@@ -1,9 +1,9 @@
 public class Main {
 	public static void main(String[] args) {
 		Solution sol = new Solution();
-		final int[] people = {100, 1, 2}; 
-		final int[] tshirts = {1, 2, 100};
-		int answer = sol.solution(people, tshirts);
+		final int N = 3; 
+		final int[][] house = {{0, 0}, {1, 0}, {2, 0}};
+		int answer = sol.solution(N, house);
 		System.out.println(answer);
 	}
 }

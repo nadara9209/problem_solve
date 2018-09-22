@@ -1,34 +1,32 @@
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
 
 class Solution {
-    public boolean solution(int[] arr) {
-        boolean answer = true;
-        answer = solve(arr);
-        process();
+    public int solution(int[] people, int[] tshirts) {
+        int answer = 0;
+        Arrays.sort(people);
+        Arrays.sort(tshirts);
+        
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int i = 0; i < tshirts.length; ++i) {
+        	list.add(tshirts[i]);
+        }
+        
+        int i = 0;
+        int j = 0;
+        for (int size : people) {
+        	for (i = j; i < list.size(); ++i) {
+        		if (size <= list.get(i)) {
+        			list.remove(i);
+        			answer++;
+        			j = i;
+        			break;
+        		}
+        		else {
+        			continue;
+        		}
+        	}
+        }
         return answer;
     }
-
-	private void process() {
-		int n = 10;
-		ArrayList<Integer>[] list = new ArrayList<>()[];
-		int[] arr = new int[n];
-		
-	}
-
-	private boolean solve(int[] arr) {
-		Set<Integer> set = new HashSet<>();
-		int limit = arr.length;
-		for (int number : arr) {
-			if (number == 0 || number > limit) {
-				return false;
-			}
-			if (set.contains(number)) {
-				return false;
-			}
-			set.add(number);
-		}
-		return true;
-	}
 }

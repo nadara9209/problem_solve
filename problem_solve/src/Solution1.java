@@ -3,18 +3,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-class Solution {
+class Solution1 {
     public int solution(String[][] relation) {
         int answer = solve(relation);
         return answer;
     }
 
 	private int solve(String[][] relation) {
-		List<Set<Integer>> categoryList;
+		List<Set<Integer>> dbSet;
 		int limit = relation[0].length;
-		categoryList = createList_1(limit);
+		dbSet = createDB(limit);
 		
-		int nOfCandidateKey = count(categoryList, relation);
+		int nOfCandidateKey = count(dbSet, relation);
 		return nOfCandidateKey;
 	}
 
@@ -27,7 +27,7 @@ class Solution {
 			for (int row = 0; row < relation.length; ++row) {
 				String str = "";
 				for (int j : categoryA) {
-					str += relation[row][j] + "_";
+					str += relation[row][j];
 				}
 				if (strSet.contains(str)) {
 					isUnique = false;
@@ -36,15 +36,26 @@ class Solution {
 				strSet.add(str);
 			}
 			
+			// 동시에 같은 resource 접근 삭제시 뒤에서 부터 삭제한다.
 			if(isUnique) {
 				retCnt++;
-				dbSet.removeIf((Set<Integer> categoryB) -> categoryB.containsAll(categoryA));
+				for (int k = dbSet.size()-1; k >= 0; --k) {
+					Set<Integer> categoryB = dbSet.get(k);
+					if (categoryB.containsAll(categoryA)) {
+						dbSet.remove(categoryB);
+					}
+				}
 			}
+			
+//			if(isUnique) {
+//				dbSet.removeIf((Set<Integer> categoryB) -> categoryB.contains(categoryA));
+//			}
 		}
+		
 		return retCnt;
 	}
 	
-	private List<Set<Integer>> createList(int n) {
+	private List<Set<Integer>> createDB(int n) {
 		List<Set<Integer>> retList = new LinkedList<>();
 		for (int i = 1; i < (1 << n); ++i) {
 			Set<Integer> tmpSet = new HashSet<>();
@@ -58,21 +69,7 @@ class Solution {
 			}
 			retList.add(tmpSet);
 		}
-		return retList;
-	}
-	
-	private List<Set<Integer>> createList_1(int n) {
-		List<Set<Integer>> retList = new LinkedList<>();
-		for (int i = 1; i < (1 << n); ++i) {
-			Set<Integer> tmpSet = new HashSet<>();
-			
-			for (int j = 0; j < n; ++j) {
-				if ((i & (1 << j)) != 0) {
-					tmpSet.add(j);
-				}
-			}
-			retList.add(tmpSet);
-		}
+		
 		return retList;
 	}
 	

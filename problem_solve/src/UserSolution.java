@@ -1,24 +1,20 @@
+import java.util.HashSet;
+import java.util.Set;
 
 class UserSolution {
     public final static int N = 4;
-    public static int[] result = new int[2];
-    
+    public static int[] numbers = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    public static Set<Integer[]> candidateSet;
+
     public void doUserImplementation(int guess[]) {
-    	String answer = "0125";
-    	input(guess, answer);
-    	Solution.Result result = output(guess);
+        candidateSet = createAllSet();
+        
     }
 
-	private Solution.Result output(int[] guess) {
-		Solution.Result result = Solution.query(guess);
-		return result;
+	private Set<Integer[]> createAllSet() {
+		// Use permutation to create powerSet
+		// Set iterator remove
+		Set<Integer[]> retSet = new HashSet<>();
+		return null;
 	}
-
-	private void input(int[] guess, String answer) {
-		for(int i = 0; i < N; ++i) {
-			guess[i] = Character.getNumericValue(answer.charAt(i));
-		}
-	}
-	
-	
 }

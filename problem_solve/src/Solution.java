@@ -1,121 +1,210 @@
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Solution {
-	static Map<Character, Integer> numDb;
-	static LinkedList<Character> list;
+	static int[] dRow = {-1,  1,  0,  0};
+	static int[] dCol = { 0,  0, -1,  1};
+	static int[][] MAP;
+	static Set<int[]> beadPosSet;
+	static int[] positions;
 	static int N;
-	static int K;
+	static int W;
+	static int H;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for (int tc = 1; tc <= T; ++tc) {
 			N = scan.nextInt();
-			K = scan.nextInt();
-			String line = scan.next();
+			W = scan.nextInt();
+			H = scan.nextInt();
 			
-			list = new LinkedList<>();
-			for (int i = 0; i < N; ++i) {
-				list.add(line.charAt(i));
+			MAP = new int[H][W];
+			for (int row = 0; row < H; ++row) {
+				for (int col = 0; col < W; ++col) {
+					MAP[row][col] = scan.nextInt();
+				}
 			}
 			
 			int answer = solve();
-			System.out.print("#" + tc + " ");
-			System.out.printf("%d\n", answer);
+			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
 	
 	private static int solve() {
-		initMap();
-		int answer = checkNum();
+		initSet();
+		int answer = countAllCases();
 		return answer;
 	}
 
-	private static int checkNum() {
-		Box treasureBox = new Box(list);
-		List<Integer> numList = new LinkedList<>();
-		for (int i = 0; i < treasureBox.rotateCnt; ++i) {
-			for (int j = 0; j < 4; ++j) {
-				int val = treasureBox.numbers[j];
-				if(numList.contains(val)) {
-					continue;
-				}
-				numList.add(val);
+	private static int countAllCases() {
+		int ret = Integer.MAX_VALUE;
+		Iterator<int[]> it = beadPosSet.iterator();
+		while(it.hasNext()) {
+			int[] beadPosition = it.next();
+			Board board = new Board(beadPosition);
+			board.shootBead();
+			int tmp = board.nOfRemainingBlocks;
+			if (ret > tmp) {
+				ret = tmp;
 			}
-			treasureBox.rotate();
 		}
-		
-		Collections.sort(numList, Collections.reverseOrder());
-		return numList.get(K-1);
+		return ret;
 	}
 
-	private static void initMap() {
-		numDb = new HashMap<>();
-		numDb.put('0', 0x0);
-		numDb.put('1', 0x1);
-		numDb.put('2', 0x2);
-		numDb.put('3', 0x3);
-		numDb.put('4', 0x4);
-		numDb.put('5', 0x5);
-		numDb.put('6', 0x6);
-		numDb.put('7', 0x7);
-		numDb.put('8', 0x8);
-		numDb.put('9', 0x9);
-		numDb.put('A', 0xA);
-		numDb.put('B', 0xB);
-		numDb.put('C', 0xC);
-		numDb.put('D', 0xD);
-		numDb.put('E', 0xE);
-		numDb.put('F', 0xF);
+	private static void initSet() {
+		positions = new int[W];
+		for (int i = 0; i < W; ++i) {
+			positions[i] = i;
+		}
+		
+		beadPosSet = new HashSet<>();
+		int[] candidatePos = new int[N];
+		
+		initSet(candidatePos, 0);
 	}
 
-	static class Box {
-		LinkedList<Character> cab;
-		int[] numbers;
-		int rotateCnt;
+	private static void initSet(int[] candidatePos, int depth) {
+		if (depth == N) {
+			beadPosSet.add(candidatePos.clone());
+			return;
+		}
 		
-		public Box(LinkedList<Character> list) {
-			this.cab = list;
-			this.numbers = new int[4];
-			this.setRotateCnt();
-			this.setNumbers();
+		for (int i = 0; i < positions.length; ++i) {
+			candidatePos[depth] = positions[i];
+			initSet(candidatePos, depth+1);
+		}
+	}
+	
+	static class Board {
+		int[][] map;
+		int[] beadPosition;
+		int nOfRemainingBlocks;
+		
+		public Board (int[] beadPosition) {
+			map = new int[H][W];
+			for (int i = 0; i < MAP.length; ++i) {
+				this.map[i] = MAP[i].clone();
+			}
+			this.beadPosition = beadPosition;
+			this.nOfRemainingBlocks = 0;
 		}
 
-		private void setRotateCnt() {
-			this.rotateCnt = this.cab.size() / 4;
+		public void shootBead() {
+			for (int col : this.beadPosition) {
+				for (int row = 0; row < this.map.length; ++row) {
+					int val = this.map[row][col];
+					if (val == 0) {
+						continue;
+					}
+					
+					Point bustPoint = new Point(row, col, val); 
+					this.bust(bustPoint);
+					break;
+				}
+			}
+			this.setNOfRemainingBlocks();
 		}
 
-		public void rotate() {
-			char tmp = cab.removeLast();
-			cab.addFirst(tmp);
-			this.setNumbers();
+		private void setNOfRemainingBlocks() {
+			int cnt = 0;
+			for (int row = 0; row < H; ++row) {
+				for (int col = 0; col < W; ++col) {
+					int val = this.map[row][col];
+					if (val != 0) {
+						cnt++;
+					}
+				}
+			}
+			this.nOfRemainingBlocks = cnt;
 		}
 
-		private void setNumbers() {
-			int limit = cab.size();
-			int diff = this.rotateCnt;
-			int id = 0;
-			
-			List<Character> copyList = new ArrayList<>();
-			copyList.addAll(this.cab);
-			
-			for (int i = 0; i < limit; i += diff) {
-				this.numbers[id] = 0;
-				
-				List<Character> subList = new ArrayList<>();
-				subList = copyList.subList(0, diff);
-				for (int j = diff-1; j >= 0; --j) {
-					this.numbers[id] += numDb.get(subList.remove(0)) << 4 * j;
+		private void bust(Point bustPoint) {
+			Queue<Point> q = new LinkedList<>();
+			q.add(bustPoint);
+			while (!q.isEmpty()) {
+				Point currP = q.poll();
+				this.destroyBlocks(currP, q);
+			}
+			this.update();
+//			System.out.println();
+//			for (int row = 0; row < H; ++row) {
+//				for (int col = 0; col < W; ++col) {
+//					System.out.print(this.map[row][col] + " ");
+//				}
+//				System.out.println();
+//			}
+//			int i = 0;
+		}
+
+		private void update() {
+			int[][] copyMap = new int[H][W];
+			for (int col = 0; col < W; ++col) {
+				List<Integer> backUpList = new ArrayList<>();
+				for (int row = H-1; row >= 0; --row) {
+					int val = this.map[row][col];
+					if (val == 0) {
+						continue;
+					}
+					backUpList.add(val);
 				}
 				
-				id++;
+				for (int i = 0; i < backUpList.size(); ++i) {
+					copyMap[(H-1) - i][col] = backUpList.get(i);
+				}
 			}
+			this.map = copyMap;
+		}
+
+		private void destroyBlocks(Point currP, Queue<Point> q) {
+			int currRow = currP.row;
+			int currCol = currP.col;
+			int currVal = currP.val;
+			this.map[currRow][currCol] = 0;
+			if (currP.val == 1) {
+				return;
+			}
+			for (int i = 0; i < 4; ++i) {
+				int nextRow = currRow;
+				int nextCol = currCol;
+				for (int j = 1; j < currVal; ++j) {
+					nextRow += dRow[i];
+					nextCol += dCol[i];
+					if (!isValid(nextRow, nextCol)) {
+						break;
+					}
+					int val = this.map[nextRow][nextCol];
+					if (val == 1) {
+						this.map[nextRow][nextCol] = 0;
+					}
+					else if (val > 1) {
+						this.map[nextRow][nextCol] = 0;
+						q.offer(new Point(nextRow, nextCol, val));
+					}
+				}
+			}
+		}
+
+		private boolean isValid(int nextRow, int nextCol) {
+			return (nextRow >= 0 && nextCol >= 0 && nextRow < H && nextCol < W);
+		}
+	}
+
+	static class Point {
+		int row;
+		int col;
+		int val;
+		
+		public Point (int row, int col, int val) {
+			this.row = row;
+			this.col = col;
+			this.val = val;
 		}
 	}
 }

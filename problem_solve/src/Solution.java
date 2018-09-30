@@ -1,210 +1,193 @@
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Solution {
+	static final int LIMIT = 400;
+	static final int DIFF = 150;
+	static Cell[][] totalCells = new Cell[LIMIT][LIMIT];
 	static int[] dRow = {-1,  1,  0,  0};
 	static int[] dCol = { 0,  0, -1,  1};
-	static int[][] MAP;
-	static Set<int[]> beadPosSet;
-	static int[] positions;
 	static int N;
-	static int W;
-	static int H;
-	public static void main(String[] args) {
+	static int M;
+	static int K;
+	public static void main(String[] args) {		
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for (int tc = 1; tc <= T; ++tc) {
 			N = scan.nextInt();
-			W = scan.nextInt();
-			H = scan.nextInt();
+			M = scan.nextInt();
+			K = scan.nextInt();
 			
-			MAP = new int[H][W];
-			for (int row = 0; row < H; ++row) {
-				for (int col = 0; col < W; ++col) {
-					MAP[row][col] = scan.nextInt();
+			//init
+			for (int row = 0; row < LIMIT; ++row) {
+				for (int col = 0; col < LIMIT; ++col) {
+					totalCells[row][col] = new Cell();
 				}
 			}
 			
-			int answer = solve();
+			Cell[][] cells = new Cell[N][M];
+			for (int row = 0; row < N; ++row) {
+				for (int col = 0; col < M; ++col) {
+					int val = scan.nextInt();
+					cells[row][col] = new Cell(val);
+				}
+			}
+			
+			for (int row = DIFF; row < N+DIFF; ++row) {
+				for (int col = DIFF; col < M+DIFF; ++col) {
+					totalCells[row][col] = cells[row-DIFF][col-DIFF];
+				}
+			}
+			
+			int answer = solve(totalCells);
 			System.out.println("#" + tc + " " + answer);
 		}
 		scan.close();
 	}
-	
-	private static int solve() {
-		initSet();
-		int answer = countAllCases();
-		return answer;
+
+	private static int solve(Cell[][] cells) {
+		Board board = new Board(cells);
+		board.process();
+		int remainingNOfCells = board.countRemainigNOfCells();
+		return remainingNOfCells;
 	}
 
-	private static int countAllCases() {
-		int ret = Integer.MAX_VALUE;
-		Iterator<int[]> it = beadPosSet.iterator();
-		while(it.hasNext()) {
-			int[] beadPosition = it.next();
-			Board board = new Board(beadPosition);
-			board.shootBead();
-			int tmp = board.nOfRemainingBlocks;
-			if (ret > tmp) {
-				ret = tmp;
-			}
-		}
-		return ret;
-	}
-
-	private static void initSet() {
-		positions = new int[W];
-		for (int i = 0; i < W; ++i) {
-			positions[i] = i;
-		}
-		
-		beadPosSet = new HashSet<>();
-		int[] candidatePos = new int[N];
-		
-		initSet(candidatePos, 0);
-	}
-
-	private static void initSet(int[] candidatePos, int depth) {
-		if (depth == N) {
-			beadPosSet.add(candidatePos.clone());
-			return;
-		}
-		
-		for (int i = 0; i < positions.length; ++i) {
-			candidatePos[depth] = positions[i];
-			initSet(candidatePos, depth+1);
-		}
-	}
-	
 	static class Board {
-		int[][] map;
-		int[] beadPosition;
-		int nOfRemainingBlocks;
+		Cell[][] cells;
 		
-		public Board (int[] beadPosition) {
-			map = new int[H][W];
-			for (int i = 0; i < MAP.length; ++i) {
-				this.map[i] = MAP[i].clone();
-			}
-			this.beadPosition = beadPosition;
-			this.nOfRemainingBlocks = 0;
+		public Board(Cell[][] cells) {
+			this.cells = cells;
 		}
 
-		public void shootBead() {
-			for (int col : this.beadPosition) {
-				for (int row = 0; row < this.map.length; ++row) {
-					int val = this.map[row][col];
-					if (val == 0) {
+		public int countRemainigNOfCells() {
+			int cnt = 0;
+			for (int row = 0; row < LIMIT; ++row) {
+				for (int col = 0; col < LIMIT; ++col) {
+					Cell cell = this.cells[row][col];
+					if (cell.isDeath || cell.lifeSpan == 0) {
 						continue;
 					}
-					
-					Point bustPoint = new Point(row, col, val); 
-					this.bust(bustPoint);
-					break;
+					cnt++;
 				}
 			}
-			this.setNOfRemainingBlocks();
+			return cnt;
 		}
 
-		private void setNOfRemainingBlocks() {
-			int cnt = 0;
-			for (int row = 0; row < H; ++row) {
-				for (int col = 0; col < W; ++col) {
-					int val = this.map[row][col];
-					if (val != 0) {
-						cnt++;
+		public void process() {
+			for (int t = 0; t < K; ++t) {
+				this.curtivate();
+			}
+		}
+
+		private void curtivate() {
+			Queue<Point> q = new LinkedList<>();
+			for (int row = 0; row < LIMIT; ++row) {
+				for (int col = 0; col < LIMIT; ++col) {
+					Cell cell = this.cells[row][col];
+					if (cell.isDeath || cell.lifeSpan == 0) {
+						continue;
+					}
+					else if (!cell.isActive) {
+						cell.inactiveTime++;
+						if (cell.inactiveTime == cell.lifeSpan) {
+							cell.isActive = true;
+						}
+					}
+					else if (cell.isActive) {
+						cell.activeTime++;
+						if (cell.activeTime == 1) {
+							q.offer(new Point(row, col));
+						}
+						
+						if (cell.activeTime == cell.lifeSpan) {
+							cell.isDeath = true;
+						}
 					}
 				}
 			}
-			this.nOfRemainingBlocks = cnt;
+			
+			this.spread(q);
 		}
 
-		private void bust(Point bustPoint) {
-			Queue<Point> q = new LinkedList<>();
-			q.add(bustPoint);
+		private void spread(Queue<Point> q) {
+			boolean[][] visited = new boolean[LIMIT][LIMIT];
 			while (!q.isEmpty()) {
 				Point currP = q.poll();
-				this.destroyBlocks(currP, q);
-			}
-			this.update();
-//			System.out.println();
-//			for (int row = 0; row < H; ++row) {
-//				for (int col = 0; col < W; ++col) {
-//					System.out.print(this.map[row][col] + " ");
-//				}
-//				System.out.println();
-//			}
-//			int i = 0;
-		}
-
-		private void update() {
-			int[][] copyMap = new int[H][W];
-			for (int col = 0; col < W; ++col) {
-				List<Integer> backUpList = new ArrayList<>();
-				for (int row = H-1; row >= 0; --row) {
-					int val = this.map[row][col];
-					if (val == 0) {
+				int currRow = currP.row;
+				int currCol = currP.col;
+				for (int i = 0; i < 4; ++i) {
+					int nextRow = currRow + dRow[i];
+					int nextCol = currCol + dCol[i];
+					if (!isValid(nextRow, nextCol)) {
 						continue;
 					}
-					backUpList.add(val);
-				}
-				
-				for (int i = 0; i < backUpList.size(); ++i) {
-					copyMap[(H-1) - i][col] = backUpList.get(i);
+					if (!visited[nextRow][nextCol] && isExist(nextRow, nextCol)) {
+						continue;
+					}
+					Cell currCell = this.cells[currRow][currCol];
+					Cell nextCell = this.cells[nextRow][nextCol];
+					
+					if (!visited[nextRow][nextCol]) {
+						nextCell.lifeSpan = currCell.lifeSpan;
+						visited[nextRow][nextCol] = true;
+					}
+					else {
+						if (nextCell.lifeSpan < currCell.lifeSpan) {
+							nextCell.lifeSpan = currCell.lifeSpan;
+						}
+					}
 				}
 			}
-			this.map = copyMap;
 		}
 
-		private void destroyBlocks(Point currP, Queue<Point> q) {
-			int currRow = currP.row;
-			int currCol = currP.col;
-			int currVal = currP.val;
-			this.map[currRow][currCol] = 0;
-			if (currP.val == 1) {
-				return;
-			}
-			for (int i = 0; i < 4; ++i) {
-				int nextRow = currRow;
-				int nextCol = currCol;
-				for (int j = 1; j < currVal; ++j) {
-					nextRow += dRow[i];
-					nextCol += dCol[i];
-					if (!isValid(nextRow, nextCol)) {
-						break;
-					}
-					int val = this.map[nextRow][nextCol];
-					if (val == 1) {
-						this.map[nextRow][nextCol] = 0;
-					}
-					else if (val > 1) {
-						this.map[nextRow][nextCol] = 0;
-						q.offer(new Point(nextRow, nextCol, val));
-					}
-				}
-			}
+		private boolean isExist(int nextRow, int nextCol) {
+			return (this.cells[nextRow][nextCol].lifeSpan > 0);
 		}
 
 		private boolean isValid(int nextRow, int nextCol) {
-			return (nextRow >= 0 && nextCol >= 0 && nextRow < H && nextCol < W);
+			return (nextRow >= 0 && nextCol >= 0 && nextRow < LIMIT && nextCol < LIMIT);
 		}
 	}
+}
 
-	static class Point {
-		int row;
-		int col;
-		int val;
-		
-		public Point (int row, int col, int val) {
-			this.row = row;
-			this.col = col;
-			this.val = val;
-		}
+class Cell {
+	boolean isDeath;
+	boolean isActive;
+	int lifeSpan;
+	int inactiveTime;
+	int activeTime;
+	
+	public Cell() {
+		this.isDeath = false;
+		this.isActive = false;
+		this.lifeSpan = 0;
+		this.inactiveTime = 0;
+		this.activeTime = 0;
+	}
+	
+	public Cell(int val) {
+		this.isDeath = false;
+		this.isActive = false;
+		this.lifeSpan = val;
+		this.inactiveTime = 0;
+		this.activeTime = 0;
+	}
+}
+
+class Point {
+	int row;
+	int col;
+	int time;
+	
+	public Point(int row, int col) {
+		this.row = row;
+		this.col = col;
+	}
+	
+	public Point(int row, int col, int time) {
+		this.row = row;
+		this.col = col;
+		this.time = time;
 	}
 }

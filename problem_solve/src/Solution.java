@@ -3,21 +3,18 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Solution {
-	static int[][] map;
 	static int N;
-	static int X;
+	static int[][] synergy;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
-		for(int tc = 1; tc <= T; ++tc) {
+		for (int tc = 1; tc <= T; ++tc) {
 			N = scan.nextInt();
-			X = scan.nextInt();
 			
-			map = new int[N][N];
-			for(int row = 0; row < N; ++row) {
-				for(int col = 0; col < N; ++col) {
-					int val = scan.nextInt();
-					map[row][col] = (val * 10);
+			synergy = new int[N][N];
+			for (int row = 0; row < N; ++row) {
+				for (int col = 0; col < N; ++col) {
+					synergy[row][col] = scan.nextInt();
 				}
 			}
 			
@@ -28,122 +25,82 @@ public class Solution {
 	}
 	
 	private static int solve() {
-		int numOfPossibleCaseWithRow = 0;
-		int numOfPossibleCaseWithCol = 0;
-		
-		for(int row = 0; row < N; ++row) {
-			int[] heightArr = new int[N];
-			for(int col = 0; col < N; ++col) {
-				heightArr[col] = map[row][col];
-			}
-			if(isPossible(heightArr)) {
-				numOfPossibleCaseWithRow++;
-			}else {
-			}
-		}
-		
-		for(int col = 0; col < N; ++col) {
-			int[] heightArr = new int[N];
-			for(int row = 0; row < N; ++row) {
-				heightArr[row] = map[row][col];
-			}
-			if(isPossible(heightArr)) {
-				numOfPossibleCaseWithCol++;
-			}
-			else {
-			}
-		}
-		
-		return numOfPossibleCaseWithRow + numOfPossibleCaseWithCol;
+		int answer = findMinGap();
+		return answer;
 	}
 
-	private static boolean isPossible(int[] heightArr) {
-		List<Point> turnPointList = new ArrayList<>();
-		for(int i = 0; i < heightArr.length-1; ++i) {
-			int flag = heightArr[i] - heightArr[i+1];
-			// 둘의 높이차이가 1이상일때
-			if(Math.abs(flag) > 10) {
-				return false;
-			}
-			if(flag == 10) {
-				// down
-				turnPointList.add(new Point(i+1, false));
-			}
-			else if (flag == -10) {
-				// up
-				turnPointList.add(new Point(i, true));
-			}
+	private static int findMinGap() {
+		List<Integer> idList = new ArrayList<>();
+		for (int i = 0; i < N; ++i) {
+			idList.add(i);
 		}
-		
-		for(int i = 0; i < turnPointList.size(); ++i) {
-			Point currP = turnPointList.get(i);
-			if(currP.isUp) {
-				int offset = currP.id;
-				offset -= (X-1);
-				if(isValid(offset)) {
-					build(currP, heightArr);
-				}
-				else {
-					return false;
-				}
-			}
-			else {
-				int offset = currP.id;
-				offset += (X-1);
-				if(isValid(offset)) {
-					build(currP, heightArr);
-				}
-				else {
-					return false;
-				}
-			}
-		}
-		
-		boolean flag = true;
-		for(int i = 0; i < heightArr.length-1; ++i) {
-			if(!(heightArr[i] % 10 == 1 && heightArr[i+1] % 10 == 1)) {
-				if(Math.abs(heightArr[i] - heightArr[i+1]) == 10) {
-					flag = false;
-				}
-			}
-			if(heightArr[i] % 10 > 1) {
-				flag = false;
-			}
-		}
-		
-		return flag;
+		List<Integer> listA = new ArrayList<>();
+		int minGap = findAllCases(idList, listA, 0);
+		return minGap;
 	}
 
-	private static void build(Point currP, int[] heightArr) {
-		if(currP.isUp) {
-			int cnt = 0;
-			int id = currP.id;
-			while(cnt < X) {
-				heightArr[id--] += 1;
-				cnt++;
-			}
+	private static int findAllCases(List<Integer> inputList, List<Integer> listA, int i) {
+		if (listA.size() == N / 2) {
+			return getGap(listA, inputList);
 		}
-		else {
-			int cnt = 0;
-			int id = currP.id;
-			while(cnt < X) {
-				heightArr[id++] += 1;
-				cnt++;
-			}
+		
+		if (i >= inputList.size()) {
+			return Integer.MAX_VALUE;
 		}
+		
+		int minGapCaseA = 0;
+		int minGapCaseB = 0;
+		
+		listA.add(inputList.get(i));
+		minGapCaseA = findAllCases(inputList, listA, i+1);
+		listA.remove(listA.size()-1);
+		
+		minGapCaseB = findAllCases(inputList, listA, i+1);
+		
+		return Math.min(minGapCaseA, minGapCaseB);
+		
 	}
 
-	private static boolean isValid(int offset) {
-		return (offset >= 0 && offset < N);
+	private static int getGap(List<Integer> listA, List<Integer> idList) {
+		List<Integer> candidateListA = new ArrayList<>();
+		int sumOfSynergyA = count(listA, candidateListA, 0);
+		
+		List<Integer> copyList = new ArrayList<>(idList);
+		List<Integer> candidateListB = new ArrayList<>();
+		List<Integer> listB = null;
+		if (copyList.removeAll(listA)) {
+			listB = copyList;
+		}
+		int sumOfSynergyB = count(listB, candidateListB, 0);
+		
+		return Math.abs(sumOfSynergyA - sumOfSynergyB);
 	}
-}
 
-class Point {
-	int id;
-	boolean isUp;
-	
-	Point(int id, boolean isUp) {
-		this.id = id;
-		this.isUp = isUp;
+	private static int count(List<Integer> inputList, List<Integer> candidateList, int i) {
+		if (candidateList.size() == 2) {
+			return getSynergy(candidateList);
+		}
+		
+		if (i >= inputList.size()) {
+			return 0;
+		}
+		
+		int scoreCaseA = 0;
+		int scoreCaseB = 0;
+		
+		candidateList.add(inputList.get(i));
+		scoreCaseA = count(inputList, candidateList, i+1);
+		candidateList.remove(candidateList.size()-1);
+		
+		scoreCaseB = count(inputList, candidateList, i+1);
+		
+		return scoreCaseA + scoreCaseB;
+	}
+
+	private static int getSynergy(List<Integer> candidateList) {
+		int firstId = candidateList.get(0);
+		int secondId = candidateList.get(1);
+		
+		return synergy[firstId][secondId] + synergy[secondId][firstId];
 	}
 }

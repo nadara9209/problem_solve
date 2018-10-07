@@ -42,6 +42,7 @@ public class Solution {
 		List<Integer> candidateList = new ArrayList<>();
 		
 		int nOfInjections;
+		// 0 ~ D-1
 		for (nOfInjections = 0; nOfInjections < D; ++nOfInjections) {
 			if (isPassed(candidateList, idList, 0, nOfInjections)) {
 				break;
@@ -81,9 +82,9 @@ public class Solution {
 		int limit = candidateList.size();
 		for (int i = 0; i < (1 << limit); ++i) {
 			boolean[] flag = new boolean[limit];
-			for (int j = i; j >= 0; j >>>= 1) {
-				if ((j & 1) != 0) {
-					flag[i] = true;
+			for (int j = 0; j < limit; ++j) {
+				if ((i & (1 << j)) != 0) {
+					flag[j] = true;
 				}
 			}
 			
@@ -110,17 +111,18 @@ public class Solution {
 					if (cntA == K) {
 						isPassedA = true;
 					}
+					cntB = 0;
 				}
 				else {
 					cntB++;
 					if (cntB == K) {
 						isPassedB = true;
 					}
+					cntA = 0;
 				}
-				
-				if (!(isPassedA || isPassedB)) {
-					return false;
-				}
+			}
+			if (!(isPassedA || isPassedB)) {
+				return false;
 			}
 		}
 		return true;

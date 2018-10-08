@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -109,23 +108,33 @@ public class Solution {
 		}
 
 		public int getHoney() {
-			int coverage = 0;
-			List<Integer> tmpList = new ArrayList<>();
-			Collections.sort(this.honeyList, Collections.reverseOrder());
-			for (int i = 0; i < this.honeyList.size(); ++i) {
-				int val = this.honeyList.get(i);
-				coverage += val;
-				if (coverage > this.coverage) {
-					break;
+			List<Integer> selectedList = new ArrayList<>();
+			int totalHoney = checkAllCases(selectedList, 0, this.honeyList, 0);
+			return totalHoney;
+		}
+
+		private int checkAllCases(List<Integer> selectedList, int sum, List<Integer> inputList, int id) {
+			if (id >= inputList.size()) {
+				if (sum <= this.coverage) {
+					int totalHoney = 0;
+					for (int i = 0; i < selectedList.size(); ++i) {
+						int val = selectedList.get(i);
+						totalHoney += val * val;
+					}
+					return totalHoney;
 				}
-				tmpList.add(val);
+				else {
+					return 0;
+				}
 			}
 			
-			int ret = 0;
-			for (int i = 0; i < tmpList.size(); ++i) {
-				ret += (tmpList.get(i) * tmpList.get(i));
-			}
-			return ret;
+			selectedList.add(inputList.get(id));
+			int caseA = checkAllCases(selectedList, sum + inputList.get(id), inputList, id+1);
+			selectedList.remove(selectedList.size()-1);
+			
+			int caseB = checkAllCases(selectedList, sum, inputList, id+1);
+			
+			return Math.max(caseA, caseB);
 		}
 	}
 }

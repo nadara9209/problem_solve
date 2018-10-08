@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -82,7 +83,7 @@ public class Solution {
 		int limit = candidateList.size();
 		for (int i = 0; i < (1 << limit); ++i) {
 			boolean[] flag = new boolean[limit];
-			for (int j = 0; j < limit; ++j) {
+			for (int j = 0; j < limit; j++) {
 				if ((i & (1 << j)) != 0) {
 					flag[j] = true;
 				}
@@ -136,22 +137,14 @@ public class Solution {
 		
 		for (int i = 0; i < candidateList.size(); ++i) {
 			int id = candidateList.get(i);
-			fill(flag[i], id, copyFilm);
+			if (flag[i]) {
+				Arrays.fill(copyFilm[id], 0);
+			}
+			else {
+				Arrays.fill(copyFilm[id], 1);
+			}
 		}
 		
 		return copyFilm;
-	}
-
-	private static void fill(boolean flag, int id, int[][] copyFilm) {
-		if (flag) {
-			for (int col = 0; col < W; ++col) {
-				copyFilm[id][col] = 0;
-			}
-		}
-		else {
-			for (int col = 0; col < W; ++col) {
-				copyFilm[id][col] = 1;
-			}
-		}
 	}
 }

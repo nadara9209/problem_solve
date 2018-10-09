@@ -1,163 +1,187 @@
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Solution {
-	static int[] dRow = { 0, -1,  1,  0,  0 };
-	static int[] dCol = { 0,  0,  0, -1,  1 };
-	static int[] opposite = { 0,  2,  1,  4,  3 };
-	static int N;
-	static int M;
-	static int K;
+	static int[] yearPlan;
+	static final int NUMBER_OF_MONTHS = 12;
+	static int[] costs;
 	
-	static List<Group> groupList;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
+		
 		int T = scan.nextInt();
 		for (int tc = 1; tc <= T; ++tc) {
-			N = scan.nextInt();
-			M = scan.nextInt();
-			K = scan.nextInt();
-			
-			groupList = new ArrayList<>();
-			for (int i = 0; i < K; ++i) {
-				int row = scan.nextInt();
-				int col = scan.nextInt();
-				int nOfMicrobes = scan.nextInt();
-				int dir = scan.nextInt();
-				groupList.add(new Group(row, col, nOfMicrobes, dir));
+			costs = new int[4];
+			for (int i = 0; i < 4; ++i) {
+				costs[i] = scan.nextInt();
+			}
+		
+			yearPlan = new int[NUMBER_OF_MONTHS];
+			for (int i = 0; i < NUMBER_OF_MONTHS; ++i) {
+				yearPlan[i] = scan.nextInt();
 			}
 			
 			int answer = solve();
 			System.out.println("#" + tc + " " + answer);
-			
 		}
+		
 		scan.close();
 	}
 	
 	private static int solve() {
-		int nOfRemainingMicrobes = simulate();
-		return nOfRemainingMicrobes;
+		int[] tmpYearPlan = yearPlan.clone();
+		List<Integer> tickets = new ArrayList<>();
+		int minCost = checkAllCases(tickets, tmpYearPlan, 0);
+		return (minCost < costs[3]) ? minCost : costs[3];
 	}
 
-	private static int simulate() {
-		for (int time = 0; time < M; ++time) {
-			Map<Point, List<Group>> posData = new HashMap<>();
-			// 이동
-			for (int i = groupList.size()-1; i >= 0; --i) {
-				Group currG = groupList.get(i);
-				if (currG.nOfMicrobes == 0) {
-					groupList.remove(currG);
-				}
-				currG.move();
-				Point p = new Point(currG.p);
-				if (!posData.containsKey(p)) {
-					posData.put(p, new ArrayList<>());
-				}
-				posData.get(p).add(currG);
+	private static int checkAllCases(List<Integer> tickets, int[] tmpYearPlan, int id) {
+		if (isAllZero(tmpYearPlan)) {
+			return getCost(tickets);
+		}
+		
+		if (id >= tmpYearPlan.length) {
+			return 0; 
+		}
+		
+		// oneday
+		int caseA = 0;
+		if (tmpYearPlan[id] > 0) {
+			int prevVal = tmpYearPlan[id];
+			tmpYearPlan[id] = 0;
+			for (int i = 0; i < prevVal; ++i) {
+				tickets.add(0);
 			}
-			
-			// 벽 충돌 및 합쳐짐.
-			for (Point p : posData.keySet()) {
-				List<Group> list = posData.get(p);
-				if (posData.get(p).size() >= 2) {
-					Collections.sort(list);
-					int dir = list.get(list.size()-1).dir;
-					int nOfMicrobes = 0;
-					for (Group g : list) {
-						nOfMicrobes += g.nOfMicrobes;
-						groupList.remove(g);
-					}
-					groupList.add(new Group(p.row, p.col, nOfMicrobes, dir));
+			caseA = checkAllCases(tickets, tmpYearPlan, id+1);
+			tmpYearPlan[id] = prevVal;
+			for (int i = 0; i < prevVal; ++i) {
+				tickets.remove(tickets.size()-1);
+			}
+		}
+		else {
+			caseA = checkAllCases(tickets, tmpYearPlan, id+1);
+		}
+		
+		
+		// onemonth
+		int caseB = 0;
+		if (tmpYearPlan[id] > 0) {
+			int prevVal = tmpYearPlan[id];
+			tmpYearPlan[id] = 0;
+			tickets.add(1);
+			caseB = checkAllCases(tickets, tmpYearPlan, id+1);
+			tmpYearPlan[id] = prevVal;
+			tickets.remove(tickets.size()-1);
+		}
+		else {
+			caseB = checkAllCases(tickets, tmpYearPlan, id+1);
+		}
+		
+		// threemonth
+		int caseC = 0;
+		if (isUsable(id, tmpYearPlan)) {
+			List<Integer> prevVals = readPrevVals(id, tmpYearPlan);
+			updateVals(id, tmpYearPlan);
+			tickets.add(2);
+			caseC = checkAllCases(tickets, tmpYearPlan, id+1);
+			rollBackVals(prevVals, id, tmpYearPlan);
+			tickets.remove(tickets.size()-1);
+		}
+		else {
+			caseC = checkAllCases(tickets, tmpYearPlan, id+1);
+		}
+		
+		return Math.min(caseA, Math.min(caseB, caseC));
+	}
+
+
+	private static void updateVals(int currId, int[] tmpYearPlan) {
+		int limit = tmpYearPlan.length - currId;
+		
+		if (limit > 3) {
+			int id = currId;
+			for (int i = 0; i < 3; ++i) {
+				tmpYearPlan[id++] = 0;
+			}
+		}
+		else {
+			int id = currId;
+			for (int i = 0; i < limit; ++i) {
+				tmpYearPlan[id++] = 0;
+			}
+		}
+	}
+
+	private static void rollBackVals(List<Integer> prevIds, int id, int[] tmpYearPlan) {
+		for (int i = 0; i < prevIds.size(); ++i) {
+			tmpYearPlan[id++] = prevIds.get(i);
+		}
+		
+	}
+
+	private static List<Integer> readPrevVals(int currId, int[] tmpYearPlan) {
+		List<Integer> retList = new ArrayList<>();
+		
+		int limit = tmpYearPlan.length - currId;
+		
+		if (limit > 3) {
+			int id = currId;
+			for (int i = 0; i < limit; ++i) {
+				if (retList.size() == 3) {
+					break;
 				}
-				else {
-					Group g = list.get(0);
-					if (!g.isValid()) {
-						g.dir = opposite[g.dir];
-						g.nOfMicrobes /= 2;
-					}
-				}
+				retList.add(tmpYearPlan[id++]);
+			}
+		}
+		else {
+			int id = currId;
+			for (int i = 0; i < limit; ++i) {
+				retList.add(tmpYearPlan[id++]);
 			}
 		}
 		
+		return retList;
+	}
+
+	private static boolean isUsable(int currId, int[] tmpYearPlan) {
+		int limit = tmpYearPlan.length - currId;
+		
+		if (limit > 3) {
+			int id = currId;
+			for (int i = 0; i < 3; ++i) {
+				if (tmpYearPlan[id++] != 0) {
+					return true;
+				}
+			}
+		}
+		else {
+			int id = currId;
+			for (int i = 0; i < limit; ++i) {
+				if (tmpYearPlan[id++] != 0) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean isAllZero(int[] tmpYearPlan) {
+		for (int i = 0; i < tmpYearPlan.length; ++i) {
+			int val = tmpYearPlan[i];
+			if (val != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static int getCost(List<Integer> tickets) {
 		int sum = 0;
-		for (int i = 0; i < groupList.size(); ++i) {
-			sum += groupList.get(i).nOfMicrobes;
+		for (int i = 0; i < tickets.size(); ++i) {
+			int id = tickets.get(i);
+			sum += costs[id];
 		}
-		
 		return sum;
 	}
-
-	static class Group implements Comparable<Group>{
-		Point p;
-		int nOfMicrobes;
-		int dir;
-		
-		public Group(int row, int col, int nOfMicrobes, int dir) {
-			this.p = new Point(row, col);
-			this.nOfMicrobes = nOfMicrobes;
-			this.dir = dir;
-		}
-
-		public boolean isValid() {
-			return this.p.isValid();
-		}
-
-		public void move() {
-			this.p.move(this.dir);
-		}
-
-		@Override
-		public int compareTo(Group o) {
-			if (this.nOfMicrobes < o.nOfMicrobes) {
-				return -1;
-			}
-			else if (this.nOfMicrobes > o.nOfMicrobes) {
-				return 1;
-			}
-			return 0;
-		}
-	}
-	
-	static class Point {
-		int row;
-		int col;
-		
-		public Point(int row, int col) {
-			this.row = row;
-			this.col = col;
-		}
-		
-		public boolean isValid() {
-			return (this.row >= 1 && this.col >= 1 && this.row < N-1 && this.col < N-1);
-		}
-
-		public Point(Point p) {
-			this.row = p.row;
-			this.col = p.col;
-		}
-		
-		public void move(int dir) {
-			this.row += dRow[dir];
-			this.col += dCol[dir];
-		}
-
-		public boolean equals(Object obj) {
-			if (this.row != ((Point) obj).row) {
-				return false;
-			}
-			if (this.col != ((Point) obj).col) {
-				return false;
-			}
-			return true;
-		}
-		
-		public int hashCode() {
-			return (this.row * N) + this.col;
-		}
-	}
 }
-

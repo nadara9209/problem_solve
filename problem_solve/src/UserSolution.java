@@ -1,3 +1,6 @@
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 class UserSolution {
     public final static int N = 4;
@@ -5,8 +8,22 @@ class UserSolution {
     public static MyArrayList<int[]> candidatesList;
     
     public void doUserImplementation(int guess[]) {
-        createAllSet();
-        solve(guess);
+        List<Integer> list = new LinkedList<>(Arrays.asList(1, 2, 3, 4));
+        List<Integer> subList = new LinkedList<>();
+        subList = list.subList(3, list.size());
+        
+        for (int i : list) {
+        	System.out.print(i + " ");
+        }
+        System.out.println();
+        for (int i : subList) {
+        	System.out.print(i + " ");
+        }
+        System.out.println();
+    	
+    	
+    	createAllSet();
+        //solve(guess);
     }
 
 	private void solve(int[] guess) {

@@ -1,24 +1,25 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
 	static int N;
 	static int M;
-	static int C;
-	static int[][] honeyBarrels;
+	static int[][] map;
+	
+	static int[] dRow = { -1,  1,  0,  0 };
+	static int[] dCol = {  0,  0, -1,  1 };
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
 		for (int tc = 1; tc <= T; ++tc) {
 			N = scan.nextInt();
 			M = scan.nextInt();
-			C = scan.nextInt();
 			
-			honeyBarrels = new int[N][N];
+			map = new int[N][N];
 			for (int row = 0; row < N; ++row) {
 				for (int col = 0; col < N; ++col) {
-					honeyBarrels[row][col] = scan.nextInt();
+					map[row][col] = scan.nextInt();
 				}
 			}
 			
@@ -29,112 +30,107 @@ public class Solution {
 	}
 	
 	private static int solve() {
-		int answer = checkAllCases();
-		return answer;
+		int maxNOfHouses = countAllCases();
+		return maxNOfHouses;
 	}
 
-	private static int checkAllCases() {
-		int ret = 0;
-		for (int row = 0; row < N; ++row) {
-			for (int col = 0; col < N; ++col) {
-				List<Integer> honeyListA = new ArrayList<>();
-				boolean[][] visited = new boolean[N][N];
-				int id = col;
-				
-				while (id < N) {
-					honeyListA.add(honeyBarrels[row][id]);
-					visited[row][id] = true;
-					if (honeyListA.size() == M) {
-						Worker workerA = new Worker(honeyListA);
-						int tmp = checkAllCases(workerA, visited);
-						if (ret < tmp) {
-							ret = tmp;
-						}
-						break;
+	private static int countAllCases() {
+		int maxNOfHouses = 0;
+		int limitOfK = (N % 2 == 1) ? N - 1 : N; 
+		
+		for (int K = 1; K <= limitOfK; ++K) {
+			for (int row = 0; row < N; ++row) {
+				for (int col = 0; col < N; ++col) {
+					int tmp = count(row, col, K);
+					if (maxNOfHouses < tmp) {
+						maxNOfHouses = tmp;
 					}
-					id++;
 				}
 			}
 		}
-		return ret;
-	}
-
-	private static int checkAllCases(Worker workerA, boolean[][] visited) {
-		int ret = 0;
+		
+		// 전체인 경우와 마지막 비교
+		int totalCaseNOfHouses = 0;
 		for (int row = 0; row < N; ++row) {
 			for (int col = 0; col < N; ++col) {
-				// 벌통은 연결되야한다(추가)
+				if (map[row][col] == 1) {
+					totalCaseNOfHouses += 1;
+				}
+			}
+		}
+		
+		int totalCaseCost = getCost(limitOfK + 1);
+		int totalCaseMoney = getMoney(totalCaseNOfHouses);
+		
+		int totalCaseHouses = (totalCaseCost <= totalCaseMoney) ? totalCaseNOfHouses : 0;
+		
+		if (maxNOfHouses < totalCaseHouses) {
+			maxNOfHouses = totalCaseHouses;
+		}
+		
+		return maxNOfHouses;
+	}
+	
+	private static int count(int row, int col, int K) {
+		int nOfHouses = 0;
+		
+		Queue<Point> q = new LinkedList<>();
+		q.offer(new Point(row, col, 1));
+		
+		boolean visited[][] = new boolean[N][N];
+		visited[row][col] = true;
+		
+		while (!q.isEmpty()) {
+			Point currPoint = q.poll();
+			int currRow = currPoint.row;
+			int currCol = currPoint.col;
+			int currDistance = currPoint.distance;
+			
+			if (map[currRow][currCol] == 1) {
+				nOfHouses += 1;
+			}
+			
+			for (int i = 0; i < 4; ++i) {
+				int nextRow = currRow + dRow[i];
+				int nextCol = currCol + dCol[i];
+				int nextDistance = currDistance + 1;
 				
-				if (visited[row][col]) { // workerA 벌통 피하기
+				if (!isValid(nextRow, nextCol) || visited[nextRow][nextCol] || nextDistance > K) {
 					continue;
 				}
-				List<Integer> honeyListB = new ArrayList<>();
-				int id = col;
 				
-				while (id < N) {
-					if (visited[row][id]) {
-						break;
-					}
-					honeyListB.add(honeyBarrels[row][id]);
-					if (honeyListB.size() == M) {
-						Worker workerB = new Worker(honeyListB);
-						int tmp = getTotalHoney(workerA, workerB);
-						if (ret < tmp) {
-							ret = tmp;
-						}
-						break;
-					}
-					id++;
-				}
+				visited[nextRow][nextCol] = true;
+				q.offer(new Point(nextRow, nextCol, nextDistance));
 			}
 		}
 		
-		return ret;
-	}
-
-	private static int getTotalHoney(Worker workerA, Worker workerB) {
-		int totalHoneyOfA = workerA.getHoney();
-		int totalHoneyOfB = workerB.getHoney();
-		return totalHoneyOfA + totalHoneyOfB;
-	}
-
-	static class Worker {
-		int coverage;
-		List<Integer> honeyList;
+		int cost = getCost(K);
+		int money = getMoney(nOfHouses);
 		
-		public Worker(List<Integer> honeyList) {
-			this.coverage = C;
-			this.honeyList = honeyList;
-		}
+		return (cost <= money) ? nOfHouses : Integer.MIN_VALUE;
+	}
 
-		public int getHoney() {
-			List<Integer> selectedList = new ArrayList<>();
-			int totalHoney = checkAllCases(0, selectedList, this.honeyList, 0);
-			return totalHoney;
-		}
+	private static int getMoney(int nOfHouses) {
+		return nOfHouses * M;
+	}
 
-		private int checkAllCases(int sum, List<Integer> selectedList, List<Integer> inputList, int id) {
-			if (id >= inputList.size()) {
-				if (sum <= this.coverage) {
-					int totalHoney = 0;
-					for (int i = 0; i < selectedList.size(); ++i) {
-						int val = selectedList.get(i);
-						totalHoney += val * val;
-					}
-					return totalHoney;
-				}
-				else {
-					return 0;
-				}
-			}
-			
-			selectedList.add(inputList.get(id));
-			int caseA = checkAllCases(sum + inputList.get(id), selectedList, inputList, id+1);
-			selectedList.remove(selectedList.size()-1);
-			
-			int caseB = checkAllCases(sum, selectedList, inputList, id+1);
-			
-			return Math.max(caseA, caseB);
+	private static int getCost(int K) {
+		return (K * K + (K - 1) * (K - 1));
+	}
+
+	private static boolean isValid(int row, int col) {
+		return (row >= 0 && col >= 0 && row < N && col < N);
+	}
+
+	static class Point {
+		int row;
+		int col;
+		int distance;
+		
+		public Point(int row, int col, int distance) {
+			this.row = row;
+			this.col = col;
+			this.distance = distance;
 		}
 	}
 }

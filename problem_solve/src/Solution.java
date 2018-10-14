@@ -43,8 +43,8 @@ public class Solution {
 		List<Integer> candidateList = new ArrayList<>();
 		
 		int nOfInjections;
-		// 0 ~ D-1
-		for (nOfInjections = 0; nOfInjections < D; ++nOfInjections) {
+		// 주입하지 않았을 경우 ~ 모두 주입했을 때까지
+		for (nOfInjections = 0; nOfInjections <= D; ++nOfInjections) {
 			if (isPassed(candidateList, idList, 0, nOfInjections)) {
 				break;
 			}
@@ -91,14 +91,15 @@ public class Solution {
 			
 			// injections
 			int[][] injectedFilm = injection(flag, candidateList);
-			// check ispassed
+			
+			// check pass possibility
 			if (checkPassed(injectedFilm)) {
 				return true;
 			}
 		}
+		
 		return false;
 	}
-
 
 	private static boolean checkPassed(int[][] injectedFilm) {
 		for (int col = 0; col < W; ++col) {
@@ -122,10 +123,11 @@ public class Solution {
 					cntA = 0;
 				}
 			}
-			if (!(isPassedA || isPassedB)) {
+			if (!isPassedA && !isPassedB) {
 				return false;
 			}
 		}
+		
 		return true;
 	}
 

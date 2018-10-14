@@ -11,6 +11,8 @@ public class Solution {
 	static int N;
 	static int M;
 	static int K;
+	
+	static Queue<Cell> cellQ;
 	public static void main(String[] args) {		
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
@@ -34,9 +36,11 @@ public class Solution {
 				}
 			}
 			
+			cellQ = new LinkedList<>();
 			for (int row = DIFF; row < N+DIFF; ++row) {
 				for (int col = DIFF; col < M+DIFF; ++col) {
-					totalCells[row][col] = cells[row-DIFF][col-DIFF];
+					Cell cell = cells[row-DIFF][col-DIFF];
+					totalCells[row][col] = cell;
 				}
 			}
 			
@@ -122,17 +126,21 @@ public class Solution {
 					if (!isValid(nextRow, nextCol)) {
 						continue;
 					}
+					
+					// 현재시점에서 방문은 안했지만 존재한다면 이미 새롭게 증식할 수 없는 이미 존재한 세포이다.
 					if (!visited[nextRow][nextCol] && isExist(nextRow, nextCol)) {
 						continue;
 					}
 					Cell currCell = this.cells[currRow][currCol];
 					Cell nextCell = this.cells[nextRow][nextCol];
 					
+					// 첫방문(즉 셀이 증식되지 않았던 곳이라면 가장 처음 증식된 세포의 life span을 그대로 받으면 됨.)
 					if (!visited[nextRow][nextCol]) {
 						nextCell.lifeSpan = currCell.lifeSpan;
 						visited[nextRow][nextCol] = true;
 					}
 					else {
+					// 그러나 재방문이라면 증식중인 것들 중에 재방문이 라면 
 						if (nextCell.lifeSpan < currCell.lifeSpan) {
 							nextCell.lifeSpan = currCell.lifeSpan;
 						}
@@ -178,16 +186,9 @@ class Cell {
 class Point {
 	int row;
 	int col;
-	int time;
 	
 	public Point(int row, int col) {
 		this.row = row;
 		this.col = col;
-	}
-	
-	public Point(int row, int col, int time) {
-		this.row = row;
-		this.col = col;
-		this.time = time;
 	}
 }

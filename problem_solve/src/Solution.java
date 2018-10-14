@@ -62,6 +62,14 @@ public class Solution {
 				else {
 					collisionMap.get(currP).add(a);
 				}
+				
+				// 위의 코드보다 약 1.2배의 시간을 소모하였다.
+				// 새로운 좌표의 원소가 추가될 경우 계속해서 
+				// 리스트를 생성하는 작업과 원소를 추가하는 작업을 비효율적으로 진행하고 있다.
+//				if (!collisionMap.containsKey(currP)) {
+//					collisionMap.put(currP, new ArrayList<>());
+//				}
+//				collisionMap.get(currP).add(a);
 			}
 			
 			// 충돌 및 소멸, 충돌 불가능 처리
@@ -107,14 +115,6 @@ public class Solution {
 	
 		public void move() {
 			this.p.move(this.dir);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof Atom) {
-				return this.p.equals(((Atom) obj).p);
-			}
-			return super.equals(obj);
 		}
 	}
 	

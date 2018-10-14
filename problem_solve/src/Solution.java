@@ -109,11 +109,11 @@ public class Solution {
 
 		public int getHoney() {
 			List<Integer> selectedList = new ArrayList<>();
-			int totalHoney = checkAllCases(selectedList, 0, this.honeyList, 0);
+			int totalHoney = checkAllCases(0, selectedList, this.honeyList, 0);
 			return totalHoney;
 		}
 
-		private int checkAllCases(List<Integer> selectedList, int sum, List<Integer> inputList, int id) {
+		private int checkAllCases(int sum, List<Integer> selectedList, List<Integer> inputList, int id) {
 			if (id >= inputList.size()) {
 				if (sum <= this.coverage) {
 					int totalHoney = 0;
@@ -129,10 +129,10 @@ public class Solution {
 			}
 			
 			selectedList.add(inputList.get(id));
-			int caseA = checkAllCases(selectedList, sum + inputList.get(id), inputList, id+1);
+			int caseA = checkAllCases(sum + inputList.get(id), selectedList, inputList, id+1);
 			selectedList.remove(selectedList.size()-1);
 			
-			int caseB = checkAllCases(selectedList, sum, inputList, id+1);
+			int caseB = checkAllCases(sum, selectedList, inputList, id+1);
 			
 			return Math.max(caseA, caseB);
 		}

@@ -38,6 +38,7 @@ public class Solution {
 	}
 	
 	private static int solve() {
+		// 구슬을 발사할 좌표를 생성 (중복순열)
 		initSet();
 		int answer = countAllCases();
 		return answer;
@@ -45,6 +46,7 @@ public class Solution {
 
 	private static int countAllCases() {
 		int ret = Integer.MAX_VALUE;
+		// 모든 좌표에서 구슬을 발사하여 이후의 남은 블럭들을 반환
 		Iterator<int[]> it = beadPosSet.iterator();
 		while(it.hasNext()) {
 			int[] beadPosition = it.next();
@@ -65,9 +67,9 @@ public class Solution {
 		}
 		
 		beadPosSet = new HashSet<>();
-		int[] candidatePos = new int[N];
+		int[] candidatePositions = new int[N];
 		
-		initSet(candidatePos, 0);
+		initSet(candidatePositions, 0);
 	}
 
 	private static void initSet(int[] candidatePos, int depth) {
@@ -96,6 +98,7 @@ public class Solution {
 			this.nOfRemainingBlocks = 0;
 		}
 
+		// 구슬 발사
 		public void shootBead() {
 			for (int col : this.beadPosition) {
 				for (int row = 0; row < this.map.length; ++row) {

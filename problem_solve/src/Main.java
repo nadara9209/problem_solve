@@ -63,12 +63,12 @@ public class Main {
 		}
 		
 		// 방문지도
-		int[][] visited = new int[N][M];
+		boolean[][] visited = new boolean[N][M];
 		
 		// 순회하며 바이러스의 원천일 경우 재귀
 		for(int row = 0; row < N; ++row) {
 			for(int col = 0; col < M; ++col) {
-				if(tmpMap[row][col] == 2) {
+				if(lab.map[row][col] == 2) {
 					spread(tmpMap, row, col, visited);
 				}
 			}
@@ -86,37 +86,36 @@ public class Main {
 		return numOfSafeSector;
 	}
 
-	private static void spread(int[][] map, int row, int col, int[][] visited) {
+	private static void spread(int[][] map, int row, int col, boolean[][] visited) {
 		// 범위
-		if(row < 0 || col < 0 || row >= N || col >= M) {
+		if(!isValid(row, col)) {
 			return;
 		}
+		
 		// 이미 방문
-		if(visited[row][col] == 1) {
+		if(visited[row][col]) {
 			return;
 		}
+		
 		// 벽
 		if(map[row][col] == 1) {
 			return;
 		}
-		// 바이러스인데 방문
-		if(map[row][col] == 2) {
-			visited[row][col] = 1;
-		}
+		
 		// 빈방인데 방문
 		if(map[row][col] == 0) {
 			map[row][col] = 2;
-			visited[row][col] = 1;
 		}
 		
-		//상
-		spread(map, row + Drow[0], col + Dcol[0], visited);
-		//하
-		spread(map, row + Drow[1], col + Dcol[1], visited);
-		//좌
-		spread(map, row + Drow[2], col + Dcol[2], visited);
-		//우
-		spread(map, row + Drow[3], col + Dcol[3], visited);
+		visited[row][col] = true;
+		
+		for (int i = 0; i < 4; ++i) {
+			spread(map, row + Drow[i], col + Dcol[i], visited);
+		}
+	}
+
+	private static boolean isValid(int row, int col) {
+		return (row >= 0 && col >= 0 && row < N && col < M);
 	}
 }
 

@@ -66,12 +66,14 @@ public class Solution {
 		int dessertType = map[row][col];
 		
 		if(!(nRightDown == 0) && nRightDown == nLeftUp && nLeftDown == nRightUp) {
-			if (row == firstRow && col == firstCol) {
-				return typeList.size();
-			}
-			else {
-				return -1;
-			}
+//			굳이 체크할 필요 없는 컨디션
+//			if (row == firstRow && col == firstCol) {
+//				return typeList.size();
+//			}
+//			else {
+//				return -1;
+//			}
+			return typeList.size();
 		}
 		
 		if(typeList.contains(dessertType)) {

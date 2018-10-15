@@ -71,6 +71,7 @@ public class Solution {
 		return maxNOfHouses;
 	}
 	
+
 	private static int count(int row, int col, int K) {
 		int nOfHouses = 0;
 		

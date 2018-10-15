@@ -9,6 +9,7 @@ public class Solution {
 	static CounterDesk ReceptionDesk;
 	static CounterDesk RepairDesk;
 	static int K;
+	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
@@ -89,97 +90,98 @@ public class Solution {
 		}
 		return retList;
 	}
-}
-
-class CounterDesk {
-	List<Counter> counterList;
-	CounterDesk(List<Counter> list) {
-		this.counterList = list;
-	}
 	
-	public void putDownCustomerToCounter(int time, Queue<Customer> customerList) {
-		for(int i = 0; i < this.counterList.size(); ++i) {
-			if(customerList.isEmpty() || !(time >= customerList.peek().arrivalTime)) {
-				break;
-			}
-			Counter c = counterList.get(i);
-			if(c.isUsable) {
-				c.startTime = time;
-				c.currCustomer = customerList.poll();
-				c.isUsable = false;
-			}
+	static class CounterDesk {
+		List<Counter> counterList;
+		CounterDesk(List<Counter> list) {
+			this.counterList = list;
 		}
-	}
-
-	public void putUpCustomerToCounter(int time, Queue<Customer> retList) {
-		List<Customer> tmpList = new ArrayList<>();
-		boolean isReceptionDesk = false;
-		for(int i = 0; i < this.counterList.size(); ++i) {
-			Counter c = this.counterList.get(i);
-			if(!c.isUsable) {
-				if((time - c.startTime) == c.processingTime) {
-					if(c.currCustomer.receptionCounterId == 0) {
-						c.currCustomer.receptionCounterId = c.id;
-						isReceptionDesk = true;
-					}
-					else if(c.currCustomer.repairCounterId == 0) {
-						c.currCustomer.repairCounterId = c.id;
-					}
-					c.currCustomer.arrivalTime = time;
-					tmpList.add(c.currCustomer);
-					c.startTime = 0;
-					c.isUsable = true;
-					c.currCustomer = null;
+		
+		public void putDownCustomerToCounter(int time, Queue<Customer> customerList) {
+			for(int i = 0; i < this.counterList.size(); ++i) {
+				if(customerList.isEmpty() || !(time >= customerList.peek().arrivalTime)) {
+					break;
+				}
+				Counter c = counterList.get(i);
+				if(c.isUsable) {
+					c.startTime = time;
+					c.currCustomer = customerList.poll();
+					c.isUsable = false;
 				}
 			}
 		}
-		// only needed for Reception Process
-		if(isReceptionDesk && tmpList.size() > 1) {
-			Collections.sort(tmpList);
-		}
-		for(int i = 0; i < tmpList.size(); ++i) {
-			retList.offer(tmpList.get(i));
-		}
-	}
-}
 
-class Counter {
-	int id;
-	int processingTime;
-	int startTime;
-	boolean isUsable;
-	Customer currCustomer;
-	
-	Counter(int id, int processingTime) {
-		this.id = id;
-		this.processingTime = processingTime;
-		this.startTime = 0;
-		this.isUsable = true;
-		this.currCustomer = null;
+		public void putUpCustomerToCounter(int time, Queue<Customer> retList) {
+			List<Customer> tmpList = new ArrayList<>();
+			boolean isReceptionDesk = false;
+			for(int i = 0; i < this.counterList.size(); ++i) {
+				Counter c = this.counterList.get(i);
+				if(!c.isUsable) {
+					if((time - c.startTime) == c.processingTime) {
+						if(c.currCustomer.receptionCounterId == 0) {
+							c.currCustomer.receptionCounterId = c.id;
+							isReceptionDesk = true;
+						}
+						else if(c.currCustomer.repairCounterId == 0) {
+							c.currCustomer.repairCounterId = c.id;
+						}
+						c.currCustomer.arrivalTime = time;
+						tmpList.add(c.currCustomer);
+						c.startTime = 0;
+						c.isUsable = true;
+						c.currCustomer = null;
+					}
+				}
+			}
+			// only needed for Reception Process
+			if(isReceptionDesk && tmpList.size() > 1) {
+				Collections.sort(tmpList);
+			}
+			for(int i = 0; i < tmpList.size(); ++i) {
+				retList.offer(tmpList.get(i));
+			}
+		}
 	}
-}
 
-class Customer implements Comparable<Customer>{
-	int id;
-	int arrivalTime;
-	int receptionCounterId;
-	int repairCounterId;
-	Customer(int id, int arrivalTime) {
-		this.id = id;
-		this.arrivalTime = arrivalTime;
-		this.receptionCounterId = 0;
-		this.repairCounterId = 0;
+	static class Counter {
+		int id;
+		int processingTime;
+		int startTime;
+		boolean isUsable;
+		Customer currCustomer;
+		
+		Counter(int id, int processingTime) {
+			this.id = id;
+			this.processingTime = processingTime;
+			this.startTime = 0;
+			this.isUsable = true;
+			this.currCustomer = null;
+		}
 	}
-	
-	public int compareTo(Customer o) {
-		if(this.receptionCounterId > o.receptionCounterId) {
-			return 1;
+
+	static class Customer implements Comparable<Customer>{
+		int id;
+		int arrivalTime;
+		int receptionCounterId;
+		int repairCounterId;
+		
+		Customer(int id, int arrivalTime) {
+			this.id = id;
+			this.arrivalTime = arrivalTime;
+			this.receptionCounterId = 0;
+			this.repairCounterId = 0;
 		}
-		else if(this.receptionCounterId < o.receptionCounterId) {
-			return -1;
-		}
-		else {
-			return 0;
+		
+		public int compareTo(Customer o) {
+			if(this.receptionCounterId > o.receptionCounterId) {
+				return 1;
+			}
+			else if(this.receptionCounterId < o.receptionCounterId) {
+				return -1;
+			}
+			else {
+				return 0;
+			}
 		}
 	}
 }

@@ -54,16 +54,19 @@ public class Solution {
 				}
 				currG.move();
 				Point p = new Point(currG.p);
+				
 				if (!posData.containsKey(p)) {
 					posData.put(p, new ArrayList<>());
 				}
 				posData.get(p).add(currG);
+				
 			}
 			
 			// 벽 충돌 및 합쳐짐.
 			for (Point p : posData.keySet()) {
 				List<Group> list = posData.get(p);
 				if (posData.get(p).size() >= 2) {
+					// 많은 미생물을 가진 쪽의 방향을 따른다.
 					Collections.sort(list);
 					int dir = list.get(list.size()-1).dir;
 					int nOfMicrobes = 0;

@@ -56,6 +56,7 @@ public class Solution {
 	private static int solve(Queue<Customer> customerList, int a, int b) {
 		Queue<Customer> afterReceptionList = new LinkedList<>();
 		afterReceptionList = processWithReceptionDesk(customerList);
+		
 		Queue<Customer> afterRepairList = new LinkedList<>();
 		afterRepairList = processWithRepairDesk(afterReceptionList);
 		
@@ -97,6 +98,7 @@ public class Solution {
 			this.counterList = list;
 		}
 		
+		// 순서대로 List에 저장되었다는 것이 확실히 되었을 때 가능하 구조
 		public void putDownCustomerToCounter(int time, Queue<Customer> customerList) {
 			for(int i = 0; i < this.counterList.size(); ++i) {
 				if(customerList.isEmpty() || !(time >= customerList.peek().arrivalTime)) {
@@ -133,6 +135,14 @@ public class Solution {
 					}
 				}
 			}
+			
+			// 문제를 정확하게 읽고 필요한 제약사항이나 예외사항을 이런식으로
+			// 특별하게 관리할 수도 있다.
+			
+			// 물론 특정 상황에만 필요한 코드는 상황자체에 유기적으로 동작해서
+			// 오류가 생길수도 있지만 깔끔한 설계가 불가능한 경우 완벽한 시나리오를 작성하고
+			// 그에 맞는 특이 컨디션을 사용해도 괜찮을 듯
+			
 			// only needed for Reception Process
 			if(isReceptionDesk && tmpList.size() > 1) {
 				Collections.sort(tmpList);

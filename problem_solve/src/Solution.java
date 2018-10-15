@@ -16,7 +16,7 @@ public class Solution {
 			for (int i = 0; i < 4; ++i) {
 				costs[i] = scan.nextInt();
 			}
-		
+			
 			yearPlan = new int[NUMBER_OF_MONTHS];
 			for (int i = 0; i < NUMBER_OF_MONTHS; ++i) {
 				yearPlan[i] = scan.nextInt();
@@ -33,6 +33,7 @@ public class Solution {
 		int[] tmpYearPlan = yearPlan.clone();
 		List<Integer> tickets = new ArrayList<>();
 		int minCost = checkAllCases(tickets, tmpYearPlan, 0);
+		
 		return (minCost < costs[3]) ? minCost : costs[3];
 	}
 
@@ -43,6 +44,11 @@ public class Solution {
 		
 		if (id >= tmpYearPlan.length) {
 			return 0; 
+		}
+		
+		// zeroday
+		if (tmpYearPlan[id] <= 0) {
+			return checkAllCases(tickets, tmpYearPlan, id+1);
 		}
 		
 		// oneday
@@ -59,10 +65,6 @@ public class Solution {
 				tickets.remove(tickets.size()-1);
 			}
 		}
-		else {
-			caseA = checkAllCases(tickets, tmpYearPlan, id+1);
-		}
-		
 		
 		// onemonth
 		int caseB = 0;
@@ -74,9 +76,6 @@ public class Solution {
 			tmpYearPlan[id] = prevVal;
 			tickets.remove(tickets.size()-1);
 		}
-		else {
-			caseB = checkAllCases(tickets, tmpYearPlan, id+1);
-		}
 		
 		// threemonth
 		int caseC = 0;
@@ -87,9 +86,6 @@ public class Solution {
 			caseC = checkAllCases(tickets, tmpYearPlan, id+1);
 			rollBackVals(prevVals, id, tmpYearPlan);
 			tickets.remove(tickets.size()-1);
-		}
-		else {
-			caseC = checkAllCases(tickets, tmpYearPlan, id+1);
 		}
 		
 		return Math.min(caseA, Math.min(caseB, caseC));
@@ -163,6 +159,7 @@ public class Solution {
 				}
 			}
 		}
+		
 		return false;
 	}
 
@@ -173,6 +170,7 @@ public class Solution {
 				return false;
 			}
 		}
+		
 		return true;
 	}
 
@@ -182,6 +180,7 @@ public class Solution {
 			int id = tickets.get(i);
 			sum += costs[id];
 		}
+		
 		return sum;
 	}
 }

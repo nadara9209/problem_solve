@@ -8,10 +8,12 @@ public class Solution {
 	static int[][] map;
 	static Point startP;
 	static ArrayList<Integer>[] tunnels;
-	static int[] entrance = {2, 3, 0, 1};
+	
+	static int[] opposite = {2, 3, 0, 1};
 	static int[] dRow = {-1,  0,  1,  0};
 	static int[] dCol = { 0, -1,  0,  1};
 	static int limitT;
+	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
@@ -49,6 +51,8 @@ public class Solution {
 		q.offer(startP);
 		boolean[][] visited = new boolean[map.length][map[0].length];
 		visited[startP.row][startP.col] = true;
+		
+		// 탈주범은 1시간 뒤에 웜홀을 통해 1거리를 갔다고 생각해야 한다.
 		int retCnt = 1;
 		
 		while (!q.isEmpty()) {
@@ -64,8 +68,11 @@ public class Solution {
 					int nextRow = currRow + dRow[i];
 					int nextCol = currCol + dCol[i];
 					int nextT = currT + 1;
+					
+					// 시간당 1이라는 거리가 고정된 일반 bfs이기 때문에
+					// nextT > limitT를 넘어버리는 순간 반환해도 됨.
 					if(nextT > limitT) {
-						break;
+						return retCnt;
 					}
 					
 					if(!isValid(nextRow, nextCol) || visited[nextRow][nextCol]) {
@@ -78,10 +85,11 @@ public class Solution {
 						continue;
 					}
 					
-					if(tunnels[nextTunnelType].get(entrance[i]) == 0) {
+					if(tunnels[nextTunnelType].get(opposite[i]) == 0) {
 						continue;
 					}
 					
+					// visited 체크하고 넣어야됨
 					visited[nextRow][nextCol] = true;
 					retCnt++;
 					
@@ -91,6 +99,9 @@ public class Solution {
 			
 		}
 
+		// 그러나 주어진 시간 안에 모든 갈 수 있는 경로를 다간 경우
+		// 위의 ret에 걸릴지 않을 수도 있으므로 안전하게 반환 루트 설정.
+		
 		return retCnt;
 	}
 
@@ -99,7 +110,7 @@ public class Solution {
 	}
 
 	private static void initTunnels() {
-		tunnels = new ArrayList[8];
+		tunnels = (ArrayList<Integer>[]) new ArrayList[8];
 		tunnels[1] = new ArrayList<>(Arrays.asList(1, 1, 1, 1));
 		tunnels[2] = new ArrayList<>(Arrays.asList(1, 0, 1, 0));
 		tunnels[3] = new ArrayList<>(Arrays.asList(0, 1, 0, 1));

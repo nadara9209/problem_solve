@@ -34,14 +34,25 @@ public class Main {
 			return countSafeSector(lab);
 		}
 		
+		if (startCol >= M) {
+			startCol = 0;
+			startRow++;
+		}
+		
+		if (!isValid(startRow, startCol)) {
+			return -1;
+		}
+		
 		int ret = 0;
+		
 		int row = startRow;
 		int col = startCol;
-		for( ; row < N; ++row) {
-			for( ; col < M; ++col) {
+		
+		for(; row < N; ++row) {
+			for(; col < M; ++col) {
 				if(lab.isWallOk(row, col)) {
 					lab.putDownWall(row, col);
-					int tmp = count(row, col, lab, requiredWall);
+					int tmp = count(row, col + 1, lab, requiredWall);
 					if(tmp > ret) {
 						ret = tmp;
 					}
@@ -50,6 +61,7 @@ public class Main {
 			}
 			col = 0;
 		}
+		
 		return ret;
 	}
 

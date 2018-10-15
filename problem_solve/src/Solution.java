@@ -76,10 +76,12 @@ public class Solution {
 
 	private static int check(Point p) {
 		int ret = 0;
+		int currRow = p.row;
+		int currCol = p.col;
 		for (int dir = 0; dir < 4; ++dir) {
-			int nextRow = p.row + dRow[dir];
-			int nextCol = p.col + dCol[dir];
-			int tmp = countAllCases(p.row, p.col, nextRow, nextCol, 1);
+			int nextRow = currRow + dRow[dir];
+			int nextCol = currCol + dCol[dir];
+			int tmp = countAllCases(currRow, currCol, nextRow, nextCol, 1);
 			if (ret < tmp) {
 				ret = tmp;
 			}

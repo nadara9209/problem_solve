@@ -3,8 +3,8 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Solution {
-	static int[] Drow = {1,  1, -1, -1,  0};
-	static int[] Dcol = {1, -1, -1,  1,  0};
+	static int[] Drow = { 1,  1, -1, -1, 0 };
+	static int[] Dcol = { 1, -1, -1,  1, 0 };
 	static int[][] map;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
@@ -42,23 +42,20 @@ public class Solution {
 				int nLeftDown = 0;
 				int nLeftUp = 0;
 				int nRightUp = 0;
-				int tmp = countDessertType(row, col, currDir, nRightDown, nLeftDown, nLeftUp, nRightUp, typeList);
+				int tmp = countDessertType(row, col, currDir, nRightDown, nLeftDown, nLeftUp, nRightUp, typeList, row, col);
 				if(ret < tmp) {
 					ret = tmp;
 				}
 			}
 		}
 		
-		return (ret == 0)? -1 : ret;
+		return (ret == 0) ? -1 : ret;
 	}
+	
 	private static int countDessertType(int row, int col, int currDir, int nRightDown, int nLeftDown, int nLeftUp,
-			int nRightUp, List<Integer> typeList) {
-		if(!isValid(row, col)) {
-			return -1;
-		}
+			int nRightUp, List<Integer> typeList, int firstRow, int firstCol) {
 		
-		int dessertType = map[row][col];
-		if(typeList.contains(dessertType)) {
+		if(!isValid(row, col)) {
 			return -1;
 		}
 		
@@ -66,58 +63,63 @@ public class Solution {
 			return -1;
 		}
 		
-		if(!(nRightDown == 0) && nRightDown == nLeftUp && (nLeftDown-1) == nRightUp) {
-			return typeList.size()+1;
+		int dessertType = map[row][col];
+		
+		if(!(nRightDown == 0) && nRightDown == nLeftUp && nLeftDown == nRightUp) {
+			if (row == firstRow && col == firstCol) {
+				return typeList.size();
+			}
+			else {
+				return -1;
+			}
 		}
 		
-		typeList.add(dessertType);
+		if(typeList.contains(dessertType)) {
+			return -1;
+		}
+		
+		typeList.add(dessertType);   
 		
 		int nCaseA = 0;
-		int keepDir = currDir;
-		int nextRow = row + Drow[keepDir];
-		int nextCol = col + Dcol[keepDir];
+		int nextRow = row + Drow[currDir];
+		int nextCol = col + Dcol[currDir];
 		
-		if(isValid(nextRow, nextCol)) {
-			switch (keepDir) {
-				case 0:
-					nCaseA = countDessertType(nextRow, nextCol, keepDir, nRightDown+1, nLeftDown, nLeftUp, nRightUp, typeList);
-					break;
-				case 1:	
-					nCaseA = countDessertType(nextRow, nextCol, keepDir, nRightDown, nLeftDown+1, nLeftUp, nRightUp, typeList);
-					break;
-				case 2:	
-					nCaseA = countDessertType(nextRow, nextCol, keepDir, nRightDown, nLeftDown, nLeftUp+1, nRightUp, typeList);
-					break;
-				case 3:	
-					nCaseA = countDessertType(nextRow, nextCol, keepDir, nRightDown, nLeftDown, nLeftUp, nRightUp+1, typeList);
-					break;
-				default:
-					break;
-			}
+		switch (currDir) {
+			case 0:
+				nCaseA = countDessertType(nextRow, nextCol, currDir, nRightDown+1, nLeftDown, nLeftUp, nRightUp, typeList, firstRow, firstCol);
+				break;
+			case 1:	
+				nCaseA = countDessertType(nextRow, nextCol, currDir, nRightDown, nLeftDown+1, nLeftUp, nRightUp, typeList, firstRow, firstCol);
+				break;
+			case 2:	
+				nCaseA = countDessertType(nextRow, nextCol, currDir, nRightDown, nLeftDown, nLeftUp+1, nRightUp, typeList, firstRow, firstCol);
+				break;
+			case 3:	
+				nCaseA = countDessertType(nextRow, nextCol, currDir, nRightDown, nLeftDown, nLeftUp, nRightUp+1, typeList, firstRow, firstCol);
+				break;
+			default:
+				break;
 		}
+		
 		
 		int nCaseB = 0;
-		int turnDir = currDir + 1;
-		nextRow = row + Drow[turnDir];
-		nextCol = col + Dcol[turnDir];
+		nextRow = row + Drow[currDir + 1];
+		nextCol = col + Dcol[currDir + 1];
 		
-		if(isValid(nextRow, nextCol)) {
-			switch (turnDir) {
-				case 1:	
-					nCaseB = countDessertType(nextRow, nextCol, turnDir, nRightDown, nLeftDown+1, nLeftUp, nRightUp, typeList);
-					break;
-				case 2:	
-					nCaseB = countDessertType(nextRow, nextCol, turnDir, nRightDown, nLeftDown, nLeftUp+1, nRightUp, typeList);
-					break;
-				case 3:	
-					nCaseB = countDessertType(nextRow, nextCol, turnDir, nRightDown, nLeftDown, nLeftUp, nRightUp+1, typeList);
-					break;
-				case 4:
-					break;
-				default:
-					break;
-			}
+		switch (currDir + 1) {
+			case 1:	
+				nCaseB = countDessertType(nextRow, nextCol, currDir + 1, nRightDown, nLeftDown+1, nLeftUp, nRightUp, typeList, firstRow, firstCol);
+				break;
+			case 2:	
+				nCaseB = countDessertType(nextRow, nextCol, currDir + 1, nRightDown, nLeftDown, nLeftUp+1, nRightUp, typeList, firstRow, firstCol);
+				break;
+			case 3:	
+				nCaseB = countDessertType(nextRow, nextCol, currDir + 1, nRightDown, nLeftDown, nLeftUp, nRightUp+1, typeList, firstRow, firstCol);
+				break;
+			default:
+				break;
 		}
+			
 		
 		typeList.remove(typeList.size()-1);
 		

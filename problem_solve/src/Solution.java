@@ -38,7 +38,7 @@ public class Solution {
 	}
 	
 	private static int solve() {
-		// 구슬을 발사할 좌표를 생성 (중복순열)
+		// 구슬을 발사할 좌표를 생성
 		initSet();
 		int answer = countAllCases();
 		return answer;
@@ -52,6 +52,7 @@ public class Solution {
 			int[] beadPosition = it.next();
 			Board board = new Board(beadPosition);
 			board.shootBead();
+			
 			int tmp = board.nOfRemainingBlocks;
 			if (ret > tmp) {
 				ret = tmp;
@@ -72,6 +73,7 @@ public class Solution {
 		initSet(candidatePositions, 0);
 	}
 
+	// 중복순열 생성
 	private static void initSet(int[] candidatePos, int depth) {
 		if (depth == N) {
 			beadPosSet.add(candidatePos.clone());
@@ -114,7 +116,8 @@ public class Solution {
 			}
 			this.setNOfRemainingBlocks();
 		}
-
+		
+		// 남은 블럭 갯수 반환
 		private void setNOfRemainingBlocks() {
 			int cnt = 0;
 			for (int row = 0; row < H; ++row) {
@@ -131,21 +134,17 @@ public class Solution {
 		private void bust(Point bustPoint) {
 			Queue<Point> q = new LinkedList<>();
 			q.add(bustPoint);
+			
+			// 큐가 모두 빌때까지 폭발. (BFS)
 			while (!q.isEmpty()) {
 				Point currP = q.poll();
 				this.destroyBlocks(currP, q);
 			}
+			
 			this.update();
-//			System.out.println();
-//			for (int row = 0; row < H; ++row) {
-//				for (int col = 0; col < W; ++col) {
-//					System.out.print(this.map[row][col] + " ");
-//				}
-//				System.out.println();
-//			}
-//			int i = 0;
 		}
-
+		
+		// 폭발 후 맵 최신화
 		private void update() {
 			int[][] copyMap = new int[H][W];
 			for (int col = 0; col < W; ++col) {
@@ -165,6 +164,7 @@ public class Solution {
 			this.map = copyMap;
 		}
 
+		// 폭발은 진행하면서 연쇄폭발할 좌표를 다시 큐에 담아줌
 		private void destroyBlocks(Point currP, Queue<Point> q) {
 			int currRow = currP.row;
 			int currCol = currP.col;

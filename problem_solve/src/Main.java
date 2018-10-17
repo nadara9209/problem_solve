@@ -1,6 +1,4 @@
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
 
@@ -20,6 +18,8 @@ public class Main {
 	
 	static int[] dRow = { 0,  1,  0 };
 	static int[] dCol = {-1,  0,  1 };
+	
+	static int[] opposite = { 2, -1, 0 };
 	
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
@@ -81,7 +81,7 @@ public class Main {
 		int row = startRow;
 		int col = startCol;
 		
-		for (; row < usedRow; ++row) {
+		for (; row <= H; ++row) {
 			for (; col < usedCol; col += DIFF) {
 				if (isPossibleLine(row, col)) {
 					board[row][col] = STATE_HORIZ;
@@ -138,7 +138,7 @@ public class Main {
 
 		public boolean check() {
 			for (int col = 1; col < usedCol; col += DIFF) {
-				Point firstP = new Point(1, col);
+				Point firstP = new Point(1, col, 1);
 				if (!this.simulate(firstP)) {
 					return false;
 				}
@@ -147,16 +147,14 @@ public class Main {
 		}
 
 		private boolean simulate(Point firstP) {
-			boolean[][] visited = new boolean[usedRow][usedCol];
 			Queue<Point> q = new LinkedList<>();
-			
-			visited[firstP.row][firstP.col] = true;
 			q.offer(firstP);
 			
 			while(!q.isEmpty()) {
 				Point currP = q.poll();
 				int currRow = currP.row;
 				int currCol = currP.col;
+				int currDir = currP.dir;
 				
 				if (currRow == usedRow - 1) {
 					if (currCol == firstP.col) {
@@ -164,32 +162,36 @@ public class Main {
 					}
 					return false;
 				}
-				
-				Map<Integer, Point> pointMap = new HashMap<>();
+
+				Point[] pointMap = new Point[3];
 				
 				for (int i = 0; i < 3; ++i) {
+					int bannedDir = opposite[currDir];
+					
+					if (i == bannedDir) {
+						continue;
+					}
+					
 					int nextRow = currRow + dRow[i];
 					int nextCol = currCol + dCol[i];
 					
-					if (!isValid(nextRow, nextCol) || visited[nextRow][nextCol]) {
+					if (!isValid(nextRow, nextCol)) {
 						continue;
 					}
 					
 					int type = this.board[nextRow][nextCol];
-					if (type == 0) {
+					if (type == STATE_EMPTY) {
 						continue;
 					}
-					pointMap.put(type, new Point(nextRow, nextCol, i));
+					pointMap[type] = new Point(nextRow, nextCol, i);
 				}
 				
-				if (pointMap.containsKey(STATE_HORIZ)) {
-					Point nextPoint = pointMap.get(STATE_HORIZ);
-					visited[nextPoint.row][nextPoint.col] = true;
-					
-					q.offer(new Point(nextPoint.row, nextPoint.col += dCol[nextPoint.dir]));
+				if (pointMap[STATE_HORIZ] != null) {
+					Point nextPoint = pointMap[STATE_HORIZ];
+					q.offer(new Point(nextPoint.row, nextPoint.col += dCol[nextPoint.dir], nextPoint.dir));
 				}
 				else {
-					Point nextPoint = pointMap.get(STATE_VERTI);
+					Point nextPoint = pointMap[STATE_VERTI];
 					q.offer(nextPoint);
 				}
 				

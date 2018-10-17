@@ -3,122 +3,307 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-	static int[] dRow = { 0, -1,  0,  1, -1, -1,  1,  1 };
-	static int[] dCol = { 1,  0, -1,  0, -1,  1, -1,  1 };
+	static int[] dRow = { -1,  1,  0,  0 };
+	static int[] dCol = {  0,  0, -1,  1 };
 	
-	static int[] opposite = { 1, 2, 3, 0 };
-	static int[][] map;
+	static final int UP = 0;
+	static final int DOWN = 1;
+	static final int LEFT = 2;
+	static final int RIGHT = 3;
+	
+	static int[] dirs = { UP, DOWN, LEFT, RIGHT }; 
+	static int N;
+	
+	static final int LIMIT_CNT = 5;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
-		int N = scan.nextInt();
 		
-		// 맵을 두배로
-		map = new int[201][201];
+		N = scan.nextInt();
 		
-		for (int i = 0; i < N; ++i) {
-			int x = scan.nextInt();
-			int y = scan.nextInt();
-			Point firstP = new Point(y * 2, x * 2);
-			int dir = scan.nextInt();
-			int limit = scan.nextInt();
-			
-			draw(firstP, dir, limit);
+		int[][] map = new int[N][N];
+		for (int row = 0; row < N; ++row) {
+			for (int col = 0; col < N; ++col) {
+				map[row][col] = scan.nextInt();
+			}
 		}
 		
-		int answer = CountOneByOneSquare();
+		Board board = new Board(map);
+		
+//		board.moveBlocks(1, board.map);
+//		board.moveBlocks(2, board.map);
+//		board.moveBlocks(3, board.map);
+		
+//		for (int row = 0; row < N; ++row) {
+//			for (int col = 0; col < N; ++col) {
+//				System.out.print(board.map[row][col] + " ");
+//			}
+//			System.out.println();
+//		}
+		
+		
+		int answer = solve(board);
 		System.out.println(answer);
-	
 		
 		scan.close();
 	}
 	
-	private static int CountOneByOneSquare() {
-		int cnt = 0;
-		for (int row = 1; row < map.length - 1; row += 2) {
-			for (int col = 1; col < map.length - 1; col += 2) {
-				if (isSquareOk(row, col)) {
-					cnt++;
+	private static int solve(Board board) {
+		int ret = 0;
+		for (int i = 0; i <= LIMIT_CNT; ++i) {
+			int tmp = board.checkAllCases(i);
+			if (ret < tmp) {
+				ret = tmp;
+			}
+		}
+		return ret;
+	}
+
+	static class Board {
+		int[][] map;
+		
+		public Board(int[][] inputMap) {
+			this.map = inputMap;
+		}
+
+		public int checkAllCases(int limit) {
+			List<Integer> selectedDirList = new ArrayList<>();
+			
+			int maxNumOfBlocks = check(selectedDirList, limit);
+			
+			return maxNumOfBlocks;
+		}
+
+		private int check(List<Integer> selectedDirList, int limit) {
+			if (selectedDirList.size() == limit) {
+//				for (int i = 0; i < selectedDirList.size(); ++i) {
+//					System.out.print(selectedDirList.get(i) + " ");
+//				}
+//				System.out.println();
+				return countMaxNumOfBlocks(selectedDirList);
+			}
+			
+			int ret = -1;
+			
+			for (int i = 0; i < dirs.length - selectedDirList.size(); ++i) {
+				selectedDirList.add(dirs[i]);
+				int tmp = check(selectedDirList, limit);
+				if (ret < tmp) {
+					ret = tmp;
+				}
+				selectedDirList.remove(selectedDirList.size() - 1);
+			}
+			
+			return ret;
+		}
+
+		private int countMaxNumOfBlocks(List<Integer> selectedDirList) {
+			// 맵 복사 
+			int[][] copyMap = new int[N][N];
+			for (int row = 0; row < N; ++row) {
+				copyMap[row] = this.map[row].clone();
+			}
+			
+			// 다 움직여 보기
+			for (int i = 0; i < selectedDirList.size(); ++i) {
+				// 현재 이동하려는 방향
+				int currDir = selectedDirList.get(i);
+			
+				this.moveBlocks(currDir, copyMap);
+			}
+			
+			int ret = this.countMaxNOfBlocks(copyMap); 
+			
+			return ret;
+		}
+
+		private int countMaxNOfBlocks(int[][] copyMap) {
+			int ret = 0;
+			for (int row = 0; row < N; ++row) {
+				for (int col = 0; col < N; ++col) {
+					int tmp = copyMap[row][col];
+					if (ret < tmp) {
+						ret = tmp;
+					}
 				}
 			}
+			return ret;
 		}
-		return cnt;
-	}
 
-	private static boolean isSquareOk(int currRow, int currCol) {
-		for (int i = 4; i < 8; ++i) {
-			int nextRow = currRow + dRow[i];
-			int nextCol = currCol + dCol[i];
-			if (map[nextRow][nextCol] != 2) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static void draw(Point firstP, int dir, int limit) {
-		Point currP = new Point(firstP);
-		List<Integer> currDirList = new ArrayList<>();
-		currDirList.add(dir);
-		currP.moveAndDraw(dir);
-		
-		for (int cnt = 0; cnt < limit; ++cnt) {
-			List<Integer> transDirList = createTransDirList(currDirList);
+		private void moveBlocks(int currDir, int[][] copyMap) {
+			switch (currDir) {
 			
-			for (int i = 0; i < transDirList.size(); ++i) {
-				int transDir = transDirList.get(i);
-				currP.moveAndDraw(transDir);
-				currDirList.add(transDir);
-			}
-		}
-	}
-
-	private static List<Integer> createTransDirList(List<Integer> currDirList) {
-		List<Integer> transDirList = new ArrayList<>();
-		for (int i = currDirList.size() - 1; i >= 0; --i) {
-			int currDir = currDirList.get(i);
-			int transDir = opposite[currDir];
-			transDirList.add(transDir);
-		}
-		return transDirList;
-	}
-
-	static class Point {
-		int row;
-		int col;
-		
-		public Point(int row, int col) {
-			this.row = row;
-			this.col = col;
-		}
-
-
-		public Point(Point p) {
-			this.row = p.row;
-			this.col = p.col;
-		}
-		
-		public void moveAndDraw(int dir) {
-			// 시작 꼭지점 색칠하고
-			if (map[this.row][this.col] != 2) {
-				map[this.row][this.col] = 2;
-			}
+			case UP:
+				for (int col = 0; col < N; ++col) {
+					// 블럭 정리
+					List<Integer> tmpList = new ArrayList<>();
+					for (int row = 0; row < N; ++row) {
+						int val = copyMap[row][col];
+						if (val == 0) {
+							continue;
+						}
+						tmpList.add(val);
+					}
+					
+					// 블럭 합치기
+					List<Integer> retList = new ArrayList<>();
+					for (int id = 0; id < tmpList.size(); ++id) {
+						int src = id;
+						int firstVal = tmpList.get(src);
+						int trg = src + 1;
+						
+						if (trg < tmpList.size()) {
+							if (firstVal == tmpList.get(trg)) {
+								firstVal *= 2;
+								retList.add(firstVal);
+								++id;
+								continue;
+							}
+						}
+						
+						retList.add(firstVal);
+					}
+					
+					// 블럭 최신화
+					for (int row = 0; row < N; ++row) {
+						if (row < retList.size()) {
+							copyMap[row][col] = retList.get(row);
+							continue;
+						}
+						copyMap[row][col] = 0;
+					}
+				}
+				break;
 			
-			// 시작 꼭지점에서 변으로 움직이고 
-			this.row += dRow[dir];
-			this.col += dCol[dir];
+			case DOWN:
+				for (int col = 0; col < N; ++col) {
+					// 블럭 정리
+					List<Integer> tmpList = new ArrayList<>();
+					for (int row = N-1; row >= 0; --row) {
+						int val = copyMap[row][col];
+						if (val == 0) {
+							continue;
+						}
+						tmpList.add(val);
+					}
+					
+					// 블럭 합치기
+					List<Integer> retList = new ArrayList<>();
+					for (int id = 0; id < tmpList.size(); ++id) {
+						int src = id;
+						int firstVal = tmpList.get(src);
+						int trg = src + 1;
+						
+						if (trg < tmpList.size()) {
+							if (firstVal == tmpList.get(trg)) {
+								firstVal *= 2;
+								retList.add(firstVal);
+								++id;
+								continue;
+							}
+						}
+						
+						retList.add(firstVal);
+					}
+					
+					// 블럭 최신화
+					int rowId = 0;
+					for (int row = N-1; row >= 0; --row) {
+						if (rowId < retList.size()) {
+							copyMap[row][col] = retList.get(rowId++);
+							continue;
+						}
+						copyMap[row][col] = 0;
+					}
+				}
+				break;
 			
-			// 변을 색칠
-			if (map[this.row][this.col] != 1) {
-				map[this.row][this.col] = 1;
-			}
+			case LEFT:
+				for (int row = 0; row < N; ++row) {
+					// 블럭 정리
+					List<Integer> tmpList = new ArrayList<>();
+					for (int col = 0; col < N; ++col) {
+						int val = copyMap[row][col];
+						if (val == 0) {
+							continue;
+						}
+						tmpList.add(val);
+					}
+					
+					// 블럭 합치기
+					List<Integer> retList = new ArrayList<>();
+					for (int id = 0; id < tmpList.size(); ++id) {
+						int src = id;
+						int firstVal = tmpList.get(src);
+						int trg = src + 1;
+						
+						if (trg < tmpList.size()) {
+							if (firstVal == tmpList.get(trg)) {
+								firstVal *= 2;
+								retList.add(firstVal);
+								++id;
+								continue;
+							}
+						}
+						
+						retList.add(firstVal);
+					}
+					
+					// 블럭 최신화
+					for (int col = 0; col < N; ++col) {
+						if (col < retList.size()) {
+							copyMap[row][col] = retList.get(col);
+							continue;
+						}
+						copyMap[row][col] = 0;
+					}
+				}
+				break;
 			
-			// 목적 꼭지점으로 이동
-			this.row += dRow[dir];
-			this.col += dCol[dir];
-			
-			// 목적 꼭지점 색칠
-			if (map[this.row][this.col] != 2) {
-				map[this.row][this.col] = 2;
+			case RIGHT:
+				for (int row = 0; row < N; ++row) {
+					// 블럭 정리
+					List<Integer> tmpList = new ArrayList<>();
+					for (int col = N-1; col >= 0; --col) {
+						int val = copyMap[row][col];
+						if (val == 0) {
+							continue;
+						}
+						tmpList.add(val);
+					}
+					
+					// 블럭 합치기
+					List<Integer> retList = new ArrayList<>();
+					for (int id = 0; id < tmpList.size(); ++id) {
+						int src = id;
+						int firstVal = tmpList.get(src);
+						int trg = src + 1;
+						
+						if (trg < tmpList.size()) {
+							if (firstVal == tmpList.get(trg)) {
+								firstVal *= 2;
+								retList.add(firstVal);
+								++id;
+								continue;
+							}
+						}
+						
+						retList.add(firstVal);
+					}
+					
+					// 블럭 최신화
+					int colId = 0;
+					for (int col = N-1; col >= 0; --col) {
+						if (colId < retList.size()) {
+							copyMap[row][col] = retList.get(colId++);
+							continue;
+						}
+						copyMap[row][col] = 0;
+					}
+				}
+				break;
+				
+			default:
+				break;
 			}
 		}
 	}

@@ -1,310 +1,135 @@
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Scanner;
 
+/*
+ * 모든 코드는 존재 이유가 있다.
+ */
+
 public class Main {
+	static int N;
+	static int M;
+	static int[][] map;
+	static List<Point> chickenList = new ArrayList<>();
+	
 	static int[] dRow = { -1,  1,  0,  0 };
 	static int[] dCol = {  0,  0, -1,  1 };
 	
-	static final int UP = 0;
-	static final int DOWN = 1;
-	static final int LEFT = 2;
-	static final int RIGHT = 3;
-	
-	static int[] dirs = { UP, DOWN, LEFT, RIGHT }; 
-	static int N;
-	
-	static final int LIMIT_CNT = 5;
 	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		
 		N = scan.nextInt();
+		M = scan.nextInt();
 		
-		int[][] map = new int[N][N];
+		map = new int[N][N];
 		for (int row = 0; row < N; ++row) {
 			for (int col = 0; col < N; ++col) {
-				map[row][col] = scan.nextInt();
+				int val = scan.nextInt();
+				if (val == 2)
+				chickenList.add(new Point(row, col));
+				map[row][col] = val;
 			}
 		}
 		
-		Board board = new Board(map);
+		int answer = solve();
 		
-//		board.moveBlocks(1, board.map);
-//		board.moveBlocks(2, board.map);
-//		board.moveBlocks(3, board.map);
-		
-//		for (int row = 0; row < N; ++row) {
-//			for (int col = 0; col < N; ++col) {
-//				System.out.print(board.map[row][col] + " ");
-//			}
-//			System.out.println();
-//		}
-		
-		
-		int answer = solve(board);
 		System.out.println(answer);
-		
 		scan.close();
 	}
 	
-	private static int solve(Board board) {
-		int ret = 0;
-		for (int i = 0; i <= LIMIT_CNT; ++i) {
-			int tmp = board.checkAllCases(i);
-			if (ret < tmp) {
-				ret = tmp;
-			}
-		}
-		return ret;
+	private static int solve() {
+		List<Point> selectedList = new ArrayList<>();
+		int minChickenLength = checkAllCases(selectedList, 0);
+		return minChickenLength;
 	}
 
-	static class Board {
-		int[][] map;
+	private static int checkAllCases(List<Point> selectedList, int id) {
+		// 특정 갯수를 뽑아야 하기에
+		if (selectedList.size() == M) {
+			return countChickenLength(selectedList);
+		}
 		
-		public Board(int[][] inputMap) {
-			this.map = inputMap;
+		// 인덱스 넘어가는 거 잡아주고
+		if (id >= chickenList.size()) {
+			return Integer.MAX_VALUE;
 		}
+		
+		selectedList.add(chickenList.get(id));
+		int caseA = checkAllCases(selectedList, id + 1);
+		selectedList.remove(selectedList.size() - 1);
+		
+		int caseB = checkAllCases(selectedList, id + 1);
+		
+		return Math.min(caseA, caseB);
+	}
 
-		public int checkAllCases(int limit) {
-			List<Integer> selectedDirList = new ArrayList<>();
-			
-			int maxNumOfBlocks = check(selectedDirList, limit);
-			
-			return maxNumOfBlocks;
+	private static int countChickenLength(List<Point> selectedList) {
+		int sumOfChickenLength = 0;
+		
+		Queue<Point> q = new LinkedList<>();
+		
+		boolean[][] visited = new boolean[N][N];
+		// 뽑힌거 큐에넣고
+		for (int i = 0; i < selectedList.size(); ++i) {
+			Point chicken = selectedList.get(i); 
+			q.offer(chicken);
+			visited[chicken.srcRow][chicken.srcCol] = true;
 		}
+		
+		// 달리기
+		while (!q.isEmpty()) {
+			Point p = q.poll();
+			int currRow = p.currRow;
+			int currCol = p.currCol;
 
-		private int check(List<Integer> selectedDirList, int limit) {
-			if (selectedDirList.size() == limit) {
-//				for (int i = 0; i < selectedDirList.size(); ++i) {
-//					System.out.print(selectedDirList.get(i) + " ");
-//				}
-//				System.out.println();
-				return countMaxNumOfBlocks(selectedDirList);
-			}
-			
-			int ret = -1;
-			
-			for (int i = 0; i < dirs.length - selectedDirList.size(); ++i) {
-				selectedDirList.add(dirs[i]);
-				int tmp = check(selectedDirList, limit);
-				if (ret < tmp) {
-					ret = tmp;
-				}
-				selectedDirList.remove(selectedDirList.size() - 1);
-			}
-			
-			return ret;
-		}
-
-		private int countMaxNumOfBlocks(List<Integer> selectedDirList) {
-			// 맵 복사 
-			int[][] copyMap = new int[N][N];
-			for (int row = 0; row < N; ++row) {
-				copyMap[row] = this.map[row].clone();
-			}
-			
-			// 다 움직여 보기
-			for (int i = 0; i < selectedDirList.size(); ++i) {
-				// 현재 이동하려는 방향
-				int currDir = selectedDirList.get(i);
-			
-				this.moveBlocks(currDir, copyMap);
-			}
-			
-			int ret = this.countMaxNOfBlocks(copyMap); 
-			
-			return ret;
-		}
-
-		private int countMaxNOfBlocks(int[][] copyMap) {
-			int ret = 0;
-			for (int row = 0; row < N; ++row) {
-				for (int col = 0; col < N; ++col) {
-					int tmp = copyMap[row][col];
-					if (ret < tmp) {
-						ret = tmp;
-					}
-				}
-			}
-			return ret;
-		}
-
-		private void moveBlocks(int currDir, int[][] copyMap) {
-			switch (currDir) {
-			
-			case UP:
-				for (int col = 0; col < N; ++col) {
-					// 블럭 정리
-					List<Integer> tmpList = new ArrayList<>();
-					for (int row = 0; row < N; ++row) {
-						int val = copyMap[row][col];
-						if (val == 0) {
-							continue;
-						}
-						tmpList.add(val);
-					}
-					
-					// 블럭 합치기
-					List<Integer> retList = new ArrayList<>();
-					for (int id = 0; id < tmpList.size(); ++id) {
-						int src = id;
-						int firstVal = tmpList.get(src);
-						int trg = src + 1;
-						
-						if (trg < tmpList.size()) {
-							if (firstVal == tmpList.get(trg)) {
-								firstVal *= 2;
-								retList.add(firstVal);
-								++id;
-								continue;
-							}
-						}
-						
-						retList.add(firstVal);
-					}
-					
-					// 블럭 최신화
-					for (int row = 0; row < N; ++row) {
-						if (row < retList.size()) {
-							copyMap[row][col] = retList.get(row);
-							continue;
-						}
-						copyMap[row][col] = 0;
-					}
-				}
-				break;
-			
-			case DOWN:
-				for (int col = 0; col < N; ++col) {
-					// 블럭 정리
-					List<Integer> tmpList = new ArrayList<>();
-					for (int row = N-1; row >= 0; --row) {
-						int val = copyMap[row][col];
-						if (val == 0) {
-							continue;
-						}
-						tmpList.add(val);
-					}
-					
-					// 블럭 합치기
-					List<Integer> retList = new ArrayList<>();
-					for (int id = 0; id < tmpList.size(); ++id) {
-						int src = id;
-						int firstVal = tmpList.get(src);
-						int trg = src + 1;
-						
-						if (trg < tmpList.size()) {
-							if (firstVal == tmpList.get(trg)) {
-								firstVal *= 2;
-								retList.add(firstVal);
-								++id;
-								continue;
-							}
-						}
-						
-						retList.add(firstVal);
-					}
-					
-					// 블럭 최신화
-					int rowId = 0;
-					for (int row = N-1; row >= 0; --row) {
-						if (rowId < retList.size()) {
-							copyMap[row][col] = retList.get(rowId++);
-							continue;
-						}
-						copyMap[row][col] = 0;
-					}
-				}
-				break;
-			
-			case LEFT:
-				for (int row = 0; row < N; ++row) {
-					// 블럭 정리
-					List<Integer> tmpList = new ArrayList<>();
-					for (int col = 0; col < N; ++col) {
-						int val = copyMap[row][col];
-						if (val == 0) {
-							continue;
-						}
-						tmpList.add(val);
-					}
-					
-					// 블럭 합치기
-					List<Integer> retList = new ArrayList<>();
-					for (int id = 0; id < tmpList.size(); ++id) {
-						int src = id;
-						int firstVal = tmpList.get(src);
-						int trg = src + 1;
-						
-						if (trg < tmpList.size()) {
-							if (firstVal == tmpList.get(trg)) {
-								firstVal *= 2;
-								retList.add(firstVal);
-								++id;
-								continue;
-							}
-						}
-						
-						retList.add(firstVal);
-					}
-					
-					// 블럭 최신화
-					for (int col = 0; col < N; ++col) {
-						if (col < retList.size()) {
-							copyMap[row][col] = retList.get(col);
-							continue;
-						}
-						copyMap[row][col] = 0;
-					}
-				}
-				break;
-			
-			case RIGHT:
-				for (int row = 0; row < N; ++row) {
-					// 블럭 정리
-					List<Integer> tmpList = new ArrayList<>();
-					for (int col = N-1; col >= 0; --col) {
-						int val = copyMap[row][col];
-						if (val == 0) {
-							continue;
-						}
-						tmpList.add(val);
-					}
-					
-					// 블럭 합치기
-					List<Integer> retList = new ArrayList<>();
-					for (int id = 0; id < tmpList.size(); ++id) {
-						int src = id;
-						int firstVal = tmpList.get(src);
-						int trg = src + 1;
-						
-						if (trg < tmpList.size()) {
-							if (firstVal == tmpList.get(trg)) {
-								firstVal *= 2;
-								retList.add(firstVal);
-								++id;
-								continue;
-							}
-						}
-						
-						retList.add(firstVal);
-					}
-					
-					// 블럭 최신화
-					int colId = 0;
-					for (int col = N-1; col >= 0; --col) {
-						if (colId < retList.size()) {
-							copyMap[row][col] = retList.get(colId++);
-							continue;
-						}
-						copyMap[row][col] = 0;
-					}
-				}
-				break;
+			for (int i = 0; i < 4; ++i) {
+				int nextRow = currRow + dRow[i];
+				int nextCol = currCol + dCol[i];
 				
-			default:
-				break;
+				if (!isValid(nextRow, nextCol) || visited[nextRow][nextCol]) {
+					continue;
+				}
+				
+				// 먼저 도착한놈 치킨거리 더해주고
+				if (map[nextRow][nextCol] == 1) {
+					sumOfChickenLength += (Math.abs(p.srcRow - nextRow) + Math.abs(p.srcCol - nextCol));
+				}
+				
+				// 도착한 곳 문닫고
+				visited[nextRow][nextCol] = true;
+				// 다시 달리기
+				q.offer(new Point(nextRow, nextCol, p.srcRow, p.srcCol));
 			}
+			
+		}
+		
+		return sumOfChickenLength;
+	}
+
+	private static boolean isValid(int inputRow, int inputCol) {
+		return (inputRow >= 0 && inputRow < N && inputCol >= 0 && inputCol < N);
+	}
+
+	static class Point {
+		int currRow;
+		int currCol;
+		int srcRow;
+		int srcCol;
+		
+		public Point(int row, int col) {
+			this.currRow = row;
+			this.currCol = col;
+			this.srcRow = row;
+			this.srcCol = col;
+		}
+		
+		public Point(int currRow, int currCol, int srcRow, int srcCol) {
+			this.currRow = currRow;
+			this.currCol = currCol;
+			this.srcRow = srcRow;
+			this.srcCol = srcCol;
 		}
 	}
 }

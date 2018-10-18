@@ -35,6 +35,7 @@ public class Main {
 		
 		L = scan.nextInt();
 		changeDirMap = new char[10001];
+		
 		for (int i = 0; i < L; ++i) {
 			changeDirMap[scan.nextInt()] = scan.next().charAt(0);
 		}
@@ -44,7 +45,7 @@ public class Main {
 		
 		int answer = solve();
 		System.out.println(answer);
-		
+
 		scan.close();
 	}
 	
@@ -66,10 +67,12 @@ public class Main {
 			if (!isValid(currHead.row, currHead.col) || snakeList.contains(currHead)) {
 				return time;
 			}
+			
 			// 사과를 먹지 못한 경우
 			if (!map[currHead.row][currHead.col]) {
 				snakeList.remove(snakeList.size() - 1);
 			}
+			
 			snakeList.add(0, currHead);
 			
 			if (changeDirMap[time] != '\0') {

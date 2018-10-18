@@ -1,7 +1,5 @@
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -21,7 +19,8 @@ public class Main {
 	
 	static int K;
 	static int L;
-	static Map<Integer, Character> changeDirMap;
+	
+	static char[] changeDirMap;
 	
 	static List<Point> snakeList;
 	public static void main(String[] args) {
@@ -35,9 +34,9 @@ public class Main {
 		}
 		
 		L = scan.nextInt();
-		changeDirMap = new HashMap<>();
+		changeDirMap = new char[10001];
 		for (int i = 0; i < L; ++i) {
-			changeDirMap.put(scan.nextInt(), scan.next().charAt(0));
+			changeDirMap[scan.nextInt()] = scan.next().charAt(0);
 		}
 		
 		snakeList = new LinkedList<>();
@@ -73,8 +72,8 @@ public class Main {
 			}
 			snakeList.add(0, currHead);
 			
-			if (changeDirMap.containsKey(time)) {
-				prevDir = transDir(prevDir, changeDirMap.get(time));
+			if (changeDirMap[time] != '\0') {
+				prevDir = transDir(prevDir, changeDirMap[time]);
 			}
 		}
 		

@@ -1,135 +1,163 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 import java.util.Scanner;
-
-/*
- * 모든 코드는 존재 이유가 있다.
- */
 
 public class Main {
 	static int N;
 	static int M;
 	static int[][] map;
-	static List<Point> chickenList = new ArrayList<>();
 	
-	static int[] dRow = { -1,  1,  0,  0 };
-	static int[] dCol = {  0,  0, -1,  1 };
+	static int[] dRow = {-1,  1,  0,  0,  0};
+	static int[] dCol = { 0,  0, -1,  1,  0};
+	static int[] opposite = { 1, 0, 3, 2, 4};
+	
+	static int[] caseA = {0, 1, 2};
+	static int[] caseB = {1, 2, 3};
+	static int[] caseC = {2, 3, 0};
+	static int[] caseD = {3, 0, 1};
 	
 	public static void main(String[] args) {
-		Scanner scan = new Scanner(System.in);
+		Scanner scan =  new Scanner(System.in);
 		
 		N = scan.nextInt();
 		M = scan.nextInt();
 		
-		map = new int[N][N];
+		map = new int[N][M];
 		for (int row = 0; row < N; ++row) {
-			for (int col = 0; col < N; ++col) {
-				int val = scan.nextInt();
-				if (val == 2)
-				chickenList.add(new Point(row, col));
-				map[row][col] = val;
+			for (int col = 0; col < M; ++col) {
+				map[row][col] = scan.nextInt();
 			}
 		}
-
-		int answer = solve();
 		
+		int answer = solve();
 		System.out.println(answer);
 		scan.close();
 	}
 
 	private static int solve() {
-		List<Point> selectedList = new ArrayList<>();
-		int minChickenLength = checkAllCases(selectedList, 0);
-		return minChickenLength;
+		int sumOfCaseA = getMaxSumA(4);
+		int sumOfCaseB = getMaxSumB(3);
+		return Math.max(sumOfCaseA, sumOfCaseB);
 	}
 
-	private static int checkAllCases(List<Point> selectedList, int id) {
-		// 특정 갯수를 뽑아야 하기에
-		if (selectedList.size() == M) {
-			return countChickenLength(selectedList);
+	private static int getMaxSumB(int limit) {
+		int ret = 0;
+		for (int row = 0; row < N; ++row) {
+			for (int col = 0; col < M; ++col) {	
+				int tmp = getMaxSumB(row, col);
+				if (ret < tmp) {
+					ret = tmp;
+				}
+			}
+		}
+		return ret;
+	}
+	
+
+	private static int getMaxSumB(int row, int col) {
+		int ret = 0;
+	
+		int sum0 = map[row][col];
+		
+		int sumA = sum0;
+		for (int i = 0; i < caseA.length; ++i) {
+			int nextRow = row + dRow[caseA[i]];
+			int nextCol = col + dCol[caseA[i]];
+			if (!isValid(nextRow, nextCol)) {
+				sumA = 0;
+				break;
+			}
+			sumA += map[nextRow][nextCol];
 		}
 		
-		// 인덱스 넘어가는 거 잡아주고
-		if (id >= chickenList.size()) {
-			return Integer.MAX_VALUE;
+		if (ret < sumA) {
+			ret = sumA;
 		}
 		
-		selectedList.add(chickenList.get(id));
-		int caseA = checkAllCases(selectedList, id + 1);
-		selectedList.remove(selectedList.size() - 1);
+		int sumB = sum0;
+		for (int i = 0; i < caseB.length; ++i) {
+			int nextRow = row + dRow[caseB[i]];
+			int nextCol = col + dCol[caseB[i]];
+			if (!isValid(nextRow, nextCol)) {
+				sumB = 0;
+				break;
+			}
+			sumB += map[nextRow][nextCol];
+		}
 		
-		int caseB = checkAllCases(selectedList, id + 1);
+		if (ret < sumB) {
+			ret = sumB;
+		}
 		
-		return Math.min(caseA, caseB);
+		int sumC = sum0;
+		for (int i = 0; i < caseC.length; ++i) {
+			int nextRow = row + dRow[caseC[i]];
+			int nextCol = col + dCol[caseC[i]];
+			if (!isValid(nextRow, nextCol)) {
+				sumC = 0;
+				break;
+			}
+			sumC += map[nextRow][nextCol];
+		}
+		
+		if (ret < sumC) {
+			ret = sumC;
+		}
+		
+		int sumD = sum0;
+		for (int i = 0; i < caseD.length; ++i) {
+			int nextRow = row + dRow[caseD[i]];
+			int nextCol = col + dCol[caseD[i]];
+			if (!isValid(nextRow, nextCol)) {
+				sumD = 0;
+				break;
+			}
+			sumD += map[nextRow][nextCol];
+		}
+		
+		if (ret < sumD) {
+			ret = sumD;
+		}
+		
+		return ret;
 	}
 
-	private static int countChickenLength(List<Point> selectedList) {
-		int sumOfChickenLength = 0;
-		
-		Queue<Point> q = new LinkedList<>();
-		
-		boolean[][] visited = new boolean[N][N];
-		// 뽑힌거 큐에넣고
-		for (int i = 0; i < selectedList.size(); ++i) {
-			Point chicken = selectedList.get(i); 
-			q.offer(chicken);
-			visited[chicken.srcRow][chicken.srcCol] = true;
+	private static int getMaxSumA(int i) {
+		int ret = 0;
+		for (int row = 0; row < N; ++row) {
+			for (int col = 0; col < M; ++col) {	
+				int tmp = getMaxSumA(row, col, 0, 4, 4);
+				if (ret < tmp) {
+					ret = tmp;
+				}
+			}
+		}
+		return ret;
+	}
+
+	private static int getMaxSumA(int row, int col, int sum, int limit, int prevDir) {
+		if (limit == 0) {
+			return sum;
 		}
 		
-		// 달리기
-		while (!q.isEmpty()) {
-			Point p = q.poll();
-			int currRow = p.currRow;
-			int currCol = p.currCol;
-
-			for (int i = 0; i < 4; ++i) {
-				int nextRow = currRow + dRow[i];
-				int nextCol = currCol + dCol[i];
-				
-				if (!isValid(nextRow, nextCol) || visited[nextRow][nextCol]) {
-					continue;
-				}
-				
-				// 먼저 도착한놈 치킨거리 더해주고
-				if (map[nextRow][nextCol] == 1) {
-					sumOfChickenLength += (Math.abs(p.srcRow - nextRow) + Math.abs(p.srcCol - nextCol));
-				}
-				
-				// 도착한 곳 문닫고
-				visited[nextRow][nextCol] = true;
-				// 다시 달리기
-				q.offer(new Point(nextRow, nextCol, p.srcRow, p.srcCol));
+		if (!isValid(row, col)) {
+			return Integer.MIN_VALUE;
+		}
+		
+		int ret = 0;
+		for (int i = 0; i < 4; ++i) {
+			if (opposite[prevDir] == i) {
+				continue;
 			}
 			
+			int tmp = getMaxSumA(row + dRow[i], col + dCol[i], sum + map[row][col], limit - 1, i);
+			if (ret < tmp) {
+				ret = tmp;
+			}
 		}
 		
-		return sumOfChickenLength;
+		return ret;
 	}
 
-	private static boolean isValid(int inputRow, int inputCol) {
-		return (inputRow >= 0 && inputRow < N && inputCol >= 0 && inputCol < N);
-	}
-
-	static class Point {
-		int currRow;
-		int currCol;
-		int srcRow;
-		int srcCol;
-		
-		public Point(int row, int col) {
-			this.currRow = row;
-			this.currCol = col;
-			this.srcRow = row;
-			this.srcCol = col;
-		}
-		
-		public Point(int currRow, int currCol, int srcRow, int srcCol) {
-			this.currRow = currRow;
-			this.currCol = currCol;
-			this.srcRow = srcRow;
-			this.srcCol = srcCol;
-		}
+	private static boolean isValid(int row, int col) {
+		return (row >= 0 && col >= 0 && row < N && col < M);
 	}
 }

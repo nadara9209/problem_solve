@@ -34,90 +34,7 @@ public class Main {
 
 	private static int solve() {
 		int sumOfCaseA = getMaxSumA(4);
-		int sumOfCaseB = getMaxSumB(3);
-		return Math.max(sumOfCaseA, sumOfCaseB);
-	}
-
-	private static int getMaxSumB(int limit) {
-		int ret = 0;
-		for (int row = 0; row < N; ++row) {
-			for (int col = 0; col < M; ++col) {	
-				int tmp = getMaxSumB(row, col);
-				if (ret < tmp) {
-					ret = tmp;
-				}
-			}
-		}
-		return ret;
-	}
-	
-
-	private static int getMaxSumB(int row, int col) {
-		int ret = 0;
-	
-		int sum0 = map[row][col];
-		
-		int sumA = sum0;
-		for (int i = 0; i < caseA.length; ++i) {
-			int nextRow = row + dRow[caseA[i]];
-			int nextCol = col + dCol[caseA[i]];
-			if (!isValid(nextRow, nextCol)) {
-				sumA = 0;
-				break;
-			}
-			sumA += map[nextRow][nextCol];
-		}
-		
-		if (ret < sumA) {
-			ret = sumA;
-		}
-		
-		int sumB = sum0;
-		for (int i = 0; i < caseB.length; ++i) {
-			int nextRow = row + dRow[caseB[i]];
-			int nextCol = col + dCol[caseB[i]];
-			if (!isValid(nextRow, nextCol)) {
-				sumB = 0;
-				break;
-			}
-			sumB += map[nextRow][nextCol];
-		}
-		
-		if (ret < sumB) {
-			ret = sumB;
-		}
-		
-		int sumC = sum0;
-		for (int i = 0; i < caseC.length; ++i) {
-			int nextRow = row + dRow[caseC[i]];
-			int nextCol = col + dCol[caseC[i]];
-			if (!isValid(nextRow, nextCol)) {
-				sumC = 0;
-				break;
-			}
-			sumC += map[nextRow][nextCol];
-		}
-		
-		if (ret < sumC) {
-			ret = sumC;
-		}
-		
-		int sumD = sum0;
-		for (int i = 0; i < caseD.length; ++i) {
-			int nextRow = row + dRow[caseD[i]];
-			int nextCol = col + dCol[caseD[i]];
-			if (!isValid(nextRow, nextCol)) {
-				sumD = 0;
-				break;
-			}
-			sumD += map[nextRow][nextCol];
-		}
-		
-		if (ret < sumD) {
-			ret = sumD;
-		}
-		
-		return ret;
+		return sumOfCaseA;
 	}
 
 	private static int getMaxSumA(int i) {
@@ -146,6 +63,17 @@ public class Main {
 		for (int i = 0; i < 4; ++i) {
 			if (opposite[prevDir] == i) {
 				continue;
+			}
+			
+			int caseA;
+			int caseB;
+		
+			if (limit == 2) {
+				caseA = sum;
+				caseA += getMaxSumA(row + dRow[i], col + dCol[i], 0, 1, i);
+				
+				caseB = sum;
+				caseB = 
 			}
 			
 			int tmp = getMaxSumA(row + dRow[i], col + dCol[i], sum + map[row][col], limit - 1, i);

@@ -1,194 +1,186 @@
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
 
 public class Solution {
-	static final int LIMIT = 400;
-	static final int DIFF = 150;
-	static Cell[][] totalCells = new Cell[LIMIT][LIMIT];
-	static int[] dRow = {-1,  1,  0,  0};
-	static int[] dCol = { 0,  0, -1,  1};
 	static int N;
 	static int M;
-	static int K;
-	
-	static Queue<Cell> cellQ;
-	public static void main(String[] args) {		
+	static int[] dRow = { -1,  1,  0,  0 };
+	static int[] dCol = {  0,  0, -1,  1 };
+	static final int LIMIT = 400;
+	static final int DIFF = 175;
+	public static void main(String[] args) {
 		Scanner scan = new Scanner(System.in);
 		int T = scan.nextInt();
+		
 		for (int tc = 1; tc <= T; ++tc) {
 			N = scan.nextInt();
 			M = scan.nextInt();
-			K = scan.nextInt();
+			int K = scan.nextInt();
 			
-			//init
-			for (int row = 0; row < LIMIT; ++row) {
-				for (int col = 0; col < LIMIT; ++col) {
-					totalCells[row][col] = new Cell();
-				}
-			}
-			
-			Cell[][] cells = new Cell[N][M];
+			int[][] tempCells = new int[N][M];
 			for (int row = 0; row < N; ++row) {
 				for (int col = 0; col < M; ++col) {
-					int val = scan.nextInt();
-					cells[row][col] = new Cell(val);
+					tempCells[row][col] = scan.nextInt();
 				}
 			}
 			
-			cellQ = new LinkedList<>();
-			for (int row = DIFF; row < N+DIFF; ++row) {
-				for (int col = DIFF; col < M+DIFF; ++col) {
-					Cell cell = cells[row-DIFF][col-DIFF];
-					totalCells[row][col] = cell;
+			
+			Cell[][] cells = new Cell[LIMIT][LIMIT];
+			for (int row = 0; row < LIMIT; ++row) {
+				for (int col = 0; col < LIMIT; ++col) {
+					cells[row][col] = new Cell();
 				}
 			}
 			
-			int answer = solve(totalCells);
+				
+			List<Point> searchList = new LinkedList<>();
+			int row_limit = N + DIFF;
+			int col_limit = M + DIFF;
+			for (int row = DIFF; row < row_limit; ++row) {
+				for (int col = DIFF; col < col_limit; ++col) {
+					int val = tempCells[row - DIFF][col - DIFF];
+					if (val != 0) {
+						cells[row][col].setLife(val);
+						searchList.add(new Point(row, col));
+					}
+				}
+			}
+			
+			int answer = solve(cells, searchList, K);
 			System.out.println("#" + tc + " " + answer);
 		}
+		
 		scan.close();
 	}
 
-	private static int solve(Cell[][] cells) {
-		Board board = new Board(cells);
-		board.process();
-		int remainingNOfCells = board.countRemainigNOfCells();
-		return remainingNOfCells;
+	private static int solve(Cell[][] cells, List<Point> list, int k) {
+		Vessel vessel = new Vessel(cells, list, k);
+		vessel.cultivate();
+		return vessel.aliveCellList.size();
 	}
 
-	static class Board {
+	static class Vessel {
 		Cell[][] cells;
+		List<Point> aliveCellList;
+		Queue<Point> breedCellQ;
+		int time;
 		
-		public Board(Cell[][] cells) {
+		public Vessel(Cell[][] cells, List<Point> list, int time) {
 			this.cells = cells;
+			this.aliveCellList = list;
+			this.breedCellQ = new LinkedList<>();
+			this.time = time;
 		}
 
-		public int countRemainigNOfCells() {
-			int cnt = 0;
-			for (int row = 0; row < LIMIT; ++row) {
-				for (int col = 0; col < LIMIT; ++col) {
-					Cell cell = this.cells[row][col];
-					if (cell.isDeath || cell.lifeSpan == 0) {
-						continue;
-					}
-					cnt++;
-				}
-			}
-			return cnt;
-		}
-
-		public void process() {
-			for (int t = 0; t < K; ++t) {
-				this.curtivate();
-			}
-		}
-
-		private void curtivate() {
-			Queue<Point> q = new LinkedList<>();
-			for (int row = 0; row < LIMIT; ++row) {
-				for (int col = 0; col < LIMIT; ++col) {
-					Cell cell = this.cells[row][col];
-					if (cell.isDeath || cell.lifeSpan == 0) {
-						continue;
-					}
-					else if (!cell.isActive) {
-						cell.inactiveTime++;
-						if (cell.inactiveTime == cell.lifeSpan) {
-							cell.isActive = true;
-						}
-					}
-					else if (cell.isActive) {
-						cell.activeTime++;
-						if (cell.activeTime == 1) {
-							q.offer(new Point(row, col));
-						}
-						
-						if (cell.activeTime == cell.lifeSpan) {
-							cell.isDeath = true;
-						}
-					}
-				}
+		public void cultivate() {
+			for (int i = 0; i < this.time; ++i) {
+				this.process();
+				this.breed();
 			}
 			
-			this.spread(q);
+			// 죽은 세포 삭제.
+			this.process();
 		}
 
-		private void spread(Queue<Point> q) {
-			boolean[][] visited = new boolean[LIMIT][LIMIT];
-			while (!q.isEmpty()) {
-				Point currP = q.poll();
+		private void process() {
+			for (int i = this.aliveCellList.size() - 1; i >= 0; --i) {
+				Point currP = this.aliveCellList.get(i);
 				int currRow = currP.row;
 				int currCol = currP.col;
+				
+				Cell currCell = this.cells[currRow][currCol];
+				
+				if (!currCell.isActivated) {
+					if (currCell.unactivatedTime == currCell.life) {
+						currCell.isActivated = true;
+						currCell.activatedTime++;
+						this.breedCellQ.offer(currP);
+					}
+					else {
+						currCell.unactivatedTime++;
+					}
+				}
+				else {
+					if (currCell.activatedTime == currCell.life) {
+						currCell.isDeath = true;
+						this.aliveCellList.remove(i);
+					}
+					else {
+						currCell.activatedTime++;
+					}
+				}
+			}	
+		}
+
+		private void breed() {
+			boolean[][] visited = new boolean[LIMIT][LIMIT];
+			while(!this.breedCellQ.isEmpty()) {
+				Point currP = this.breedCellQ.poll();
+				int currRow = currP.row;
+				int currCol = currP.col;
+				
+				Cell currCell = this.cells[currRow][currCol];
+				int currLife = currCell.life;
+				
 				for (int i = 0; i < 4; ++i) {
 					int nextRow = currRow + dRow[i];
 					int nextCol = currCol + dCol[i];
-					if (!isValid(nextRow, nextCol)) {
-						continue;
-					}
 					
-					// 현재시점에서 방문은 안했지만 존재한다면 이미 새롭게 증식할 수 없는 이미 존재한 세포이다.
-					if (!visited[nextRow][nextCol] && isExist(nextRow, nextCol)) {
-						continue;
-					}
-					Cell currCell = this.cells[currRow][currCol];
 					Cell nextCell = this.cells[nextRow][nextCol];
 					
-					// 첫방문(즉 셀이 증식되지 않았던 곳이라면 가장 처음 증식된 세포의 life span을 그대로 받으면 됨.)
-					if (!visited[nextRow][nextCol]) {
-						nextCell.lifeSpan = currCell.lifeSpan;
+					if (nextCell.life == 0) {
+						nextCell.setLife(currLife);
 						visited[nextRow][nextCol] = true;
+						this.aliveCellList.add(new Point(nextRow, nextCol));
 					}
-					else {
-					// 그러나 재방문이라면 증식중인 것들 중에 재방문이 라면 
-						if (nextCell.lifeSpan < currCell.lifeSpan) {
-							nextCell.lifeSpan = currCell.lifeSpan;
+					else if (visited[nextRow][nextCol]) {
+						if (nextCell.life < currLife) {
+							nextCell.setLife(currLife);
 						}
 					}
 				}
+				
 			}
 		}
-
-		private boolean isExist(int nextRow, int nextCol) {
-			return (this.cells[nextRow][nextCol].lifeSpan > 0);
+	}
+	
+	static class Cell {
+		boolean isDeath;
+		boolean isActivated;
+		int activatedTime;
+		int unactivatedTime;
+		int life;
+		
+		public Cell(int val) {
+			this.isDeath = false;
+			this.isActivated = false;
+			this.activatedTime = 0;
+			this.unactivatedTime = 0;
+			this.life = val;
 		}
 
-		private boolean isValid(int nextRow, int nextCol) {
-			return (nextRow >= 0 && nextCol >= 0 && nextRow < LIMIT && nextCol < LIMIT);
+		public Cell() {
+			this.isDeath = false;
+			this.isActivated = false;
+			this.activatedTime = 0;
+			this.unactivatedTime = 0;
+			this.life = 0;
+		}
+		
+		public void setLife(int val) {
+			this.life = val;
 		}
 	}
-}
-
-class Cell {
-	boolean isDeath;
-	boolean isActive;
-	int lifeSpan;
-	int inactiveTime;
-	int activeTime;
 	
-	public Cell() {
-		this.isDeath = false;
-		this.isActive = false;
-		this.lifeSpan = 0;
-		this.inactiveTime = 0;
-		this.activeTime = 0;
-	}
-	
-	public Cell(int val) {
-		this.isDeath = false;
-		this.isActive = false;
-		this.lifeSpan = val;
-		this.inactiveTime = 0;
-		this.activeTime = 0;
-	}
-}
-
-class Point {
-	int row;
-	int col;
-	
-	public Point(int row, int col) {
-		this.row = row;
-		this.col = col;
+	static class Point {
+		int row;
+		int col;
+		
+		public Point(int row, int col) {
+			this.row = row;
+			this.col = col;
+		}
 	}
 }

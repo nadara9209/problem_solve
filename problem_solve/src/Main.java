@@ -32,13 +32,13 @@ public class Main {
 				map[row][col] = val;
 			}
 		}
-		
+
 		int answer = solve();
 		
 		System.out.println(answer);
 		scan.close();
 	}
-	
+
 	private static int solve() {
 		List<Point> selectedList = new ArrayList<>();
 		int minChickenLength = checkAllCases(selectedList, 0);

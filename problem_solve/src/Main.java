@@ -41,13 +41,20 @@ public class Main {
 
 	private static int solve() {
 		List<Point> selectedList = new ArrayList<>();
-		int minChickenLength = checkAllCases(selectedList, 0);
-		return minChickenLength;
+		int ret = Integer.MAX_VALUE;
+		for (int i = 1; i <= M; ++i) {
+			int minChickenLength = checkAllCases(selectedList, 0, i);
+			if (ret > minChickenLength) {
+				ret = minChickenLength;
+			}
+		}
+		
+		return ret;
 	}
 
-	private static int checkAllCases(List<Point> selectedList, int id) {
+	private static int checkAllCases(List<Point> selectedList, int id, int limit) {
 		// 특정 갯수를 뽑아야 하기에
-		if (selectedList.size() == M) {
+		if (selectedList.size() == limit) {
 			return countChickenLength(selectedList);
 		}
 		
@@ -57,10 +64,10 @@ public class Main {
 		}
 		
 		selectedList.add(chickenList.get(id));
-		int caseA = checkAllCases(selectedList, id + 1);
+		int caseA = checkAllCases(selectedList, id + 1, limit);
 		selectedList.remove(selectedList.size() - 1);
 		
-		int caseB = checkAllCases(selectedList, id + 1);
+		int caseB = checkAllCases(selectedList, id + 1, limit);
 		
 		return Math.min(caseA, caseB);
 	}

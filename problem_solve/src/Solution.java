@@ -46,13 +46,8 @@ public class Solution {
 			return 0; 
 		}
 		
-		// zeroday
-		if (tmpYearPlan[id] <= 0) {
-			return checkAllCases(tickets, tmpYearPlan, id+1);
-		}
-		
 		// oneday
-		int caseA = 0;
+		int caseA = Integer.MAX_VALUE;
 		if (tmpYearPlan[id] > 0) {
 			int prevVal = tmpYearPlan[id];
 			tmpYearPlan[id] = 0;
@@ -67,7 +62,7 @@ public class Solution {
 		}
 		
 		// onemonth
-		int caseB = 0;
+		int caseB = Integer.MAX_VALUE;
 		if (tmpYearPlan[id] > 0) {
 			int prevVal = tmpYearPlan[id];
 			tmpYearPlan[id] = 0;
@@ -78,7 +73,7 @@ public class Solution {
 		}
 		
 		// threemonth
-		int caseC = 0;
+		int caseC = Integer.MAX_VALUE;
 		if (isUsable(id, tmpYearPlan)) {
 			List<Integer> prevVals = readPrevVals(id, tmpYearPlan);
 			updateVals(id, tmpYearPlan);
@@ -88,7 +83,15 @@ public class Solution {
 			tickets.remove(tickets.size()-1);
 		}
 		
-		return Math.min(caseA, Math.min(caseB, caseC));
+		// zeroday
+		int caseD = Integer.MAX_VALUE;
+		if (tmpYearPlan[id] <= 0) {
+			caseD = checkAllCases(tickets, tmpYearPlan, id+1);
+		}
+
+//		return Math.min(caseA, Math.min(caseB, caseC));
+//		return Math.min(Math.min(caseA, caseB), Math.min(caseC, caseD));
+		return Math.min(Math.min(Math.min(caseA, caseB), caseC), caseD);
 	}
 
 

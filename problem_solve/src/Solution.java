@@ -118,6 +118,7 @@ public class Solution {
 	private static int count(Point firstP, int Dir) {
 		int score = 0;
 
+		// บนป็
 		Point currP = new Point(firstP);
 		do {
 //			Point prevP = new Point(currP);
